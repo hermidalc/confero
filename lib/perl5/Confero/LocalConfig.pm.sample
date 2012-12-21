@@ -1,0 +1,161 @@
+package Confero::LocalConfig;
+
+use strict;
+use warnings;
+use Const::Fast;
+require Exporter;
+
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(
+    $CTK_BASE_DIR
+    $CTK_TEMP_DIR
+    $CTK_ADMIN_EMAIL_ADDRESS
+    $CTK_DB_DRIVER
+    $CTK_DB_SERVER_VERSION
+    $CTK_DB_HOST
+    $CTK_DB_NAME
+    $CTK_DB_PORT
+    $CTK_DB_USER
+    $CTK_DB_PASS
+    $CTK_DATA_FILE_MIN_NUM_ENTRIES
+    $CTK_DATA_FILE_MAX_ERRORS_TO_LOG
+    $CTK_DATA_FILE_MAX_INVALID_IDS
+    $CTK_DATA_FILE_MUST_HAVE_ALL_IDS
+    $CTK_DATA_FILE_MIN_GENE_SET_SIZE
+    $CTK_DATA_FILE_MAX_GENE_SET_SIZE
+    $CTK_DATA_FILE_SPLIT_METHOD
+    $CTK_DATA_DEFAULT_COLLAPSING_METHOD
+    $CTK_DATA_DEFAULT_GENE_SET_SIZE
+    $CTK_DATA_DEFAULT_DIFF_EXPRESS_COLUMN
+    $CTK_DATA_DEFAULT_DIFF_EXPRESS_P_VAL
+    $CTK_DATA_DEFAULT_DIFF_EXPRESS_M_VAL
+    $CTK_DATA_GENE_SET_MIN_ABS_M
+    $CTK_DATA_GENE_SET_MAX_P
+    $CTK_AFFY_ANNOT_NETAFFX_VERSION
+    $CTK_GSEA_JAVA_PATH
+    $CTK_GSEA_NUM_PERMUTATIONS
+    $CTK_GSEA_MAX_JAVA_HEAP_SIZE
+    $CTK_GSEA_DEFAULT_SCORING_SCHEME
+    $CTK_GSEA_GENE_SET_MIN
+    $CTK_GSEA_GENE_SET_MAX
+    $CTK_GSEA_PLOT_TOP_X
+    $CTK_WEB_SERVER_HOST
+    $CTK_WEB_SERVER_PORT
+    $CTK_DISPLAY_ID_SPACER
+    $CTK_DISPLAY_ID_PREFIX
+    @CTK_DISPLAY_ID_CONTRAST_SURROUND_CHARS
+);
+our %EXPORT_TAGS = ( 
+    all => \@EXPORT_OK,
+    general => [qw(
+        $CTK_BASE_DIR
+        $CTK_TEMP_DIR
+        $CTK_ADMIN_EMAIL_ADDRESS
+    )],
+    database => [qw(
+        $CTK_DB_DRIVER
+        $CTK_DB_SERVER_VERSION
+        $CTK_DB_HOST
+        $CTK_DB_NAME
+        $CTK_DB_PORT
+        $CTK_DB_USER
+        $CTK_DB_PASS
+    )],
+    data => [qw(
+        $CTK_DATA_FILE_MIN_NUM_ENTRIES
+        $CTK_DATA_FILE_MAX_ERRORS_TO_LOG
+        $CTK_DATA_FILE_MAX_INVALID_IDS
+        $CTK_DATA_FILE_MUST_HAVE_ALL_IDS
+        $CTK_DATA_FILE_MIN_GENE_SET_SIZE
+        $CTK_DATA_FILE_MAX_GENE_SET_SIZE
+        $CTK_DATA_FILE_SPLIT_METHOD
+        $CTK_DATA_DEFAULT_COLLAPSING_METHOD
+        $CTK_DATA_DEFAULT_GENE_SET_SIZE
+        $CTK_DATA_DEFAULT_DIFF_EXPRESS_COLUMN
+        $CTK_DATA_DEFAULT_DIFF_EXPRESS_P_VAL
+        $CTK_DATA_DEFAULT_DIFF_EXPRESS_M_VAL
+        $CTK_DATA_GENE_SET_MIN_ABS_M
+        $CTK_DATA_GENE_SET_MAX_P
+    )],
+    affy => [qw(
+        $CTK_AFFY_ANNOT_NETAFFX_VERSION
+    )],
+    gsea => [qw(
+        $CTK_GSEA_JAVA_PATH
+        $CTK_GSEA_NUM_PERMUTATIONS
+        $CTK_GSEA_MAX_JAVA_HEAP_SIZE
+        $CTK_GSEA_DEFAULT_SCORING_SCHEME
+        $CTK_GSEA_GENE_SET_MIN
+        $CTK_GSEA_GENE_SET_MAX
+        $CTK_GSEA_PLOT_TOP_X )],
+    web => [qw(
+        $CTK_WEB_SERVER_HOST
+        $CTK_WEB_SERVER_PORT
+        $CTK_DISPLAY_ID_SPACER
+        $CTK_DISPLAY_ID_PREFIX
+        @CTK_DISPLAY_ID_CONTRAST_SURROUND_CHARS
+    )],
+);
+our $VERSION = '0.8';
+
+# General
+const our $CTK_BASE_DIR                              => '/path/to/confero_platform';
+const our $CTK_TEMP_DIR                              => "$CTK_BASE_DIR/tmp";
+const our $CTK_ADMIN_EMAIL_ADDRESS                   => 'confero_admin@your_organisation.com';
+
+# Database
+# DBD driver: can be 'mysql', 'Pg', or 'Oracle'
+const our $CTK_DB_DRIVER                             => 'mysql';
+# RDBMS version for DBD driver used (for SQL::Translator)
+const our $CTK_DB_SERVER_VERSION                     => 'x.y.z';
+# if you specify localhost will use socket instead of port below
+const our $CTK_DB_HOST                               => 'your_hostname';
+const our $CTK_DB_NAME                               => 'confero_dev';
+# MySQL default is 3306
+const our $CTK_DB_PORT                               => 3306;
+const our $CTK_DB_USER                               => 'confero';
+const our $CTK_DB_PASS                               => 'a_db_password';
+
+# Data
+const our $CTK_DATA_FILE_MIN_NUM_ENTRIES             => 2000;
+const our $CTK_DATA_FILE_MAX_ERRORS_TO_LOG           => 20;
+const our $CTK_DATA_FILE_MAX_INVALID_IDS             => 50;
+# boolean 0 or 1
+const our $CTK_DATA_FILE_MUST_HAVE_ALL_IDS           => 0;
+const our $CTK_DATA_FILE_MIN_GENE_SET_SIZE           => 15;
+const our $CTK_DATA_FILE_MAX_GENE_SET_SIZE           => 500;
+# 'zero' or 'median_m'
+const our $CTK_DATA_FILE_SPLIT_METHOD                => 'zero';
+# 'contrast_data', 'dataset_data', or 'rep_source_id'
+const our $CTK_DATA_DEFAULT_COLLAPSING_METHOD        => 'contrast_data';
+# must be smaller than $CTK_DATA_FILE_MIN_NUM_ENTRIES and between $CTK_DATA_FILE_MIN_GENE_SET_SIZE and $CTK_DATA_FILE_MAX_GENE_SET_SIZE
+const our $CTK_DATA_DEFAULT_GENE_SET_SIZE            => 200;
+const our $CTK_DATA_DEFAULT_DIFF_EXPRESS_COLUMN      => 'P';
+const our $CTK_DATA_DEFAULT_DIFF_EXPRESS_P_VAL       => 0.05;
+const our $CTK_DATA_DEFAULT_DIFF_EXPRESS_M_VAL       => 1.5;
+const our $CTK_DATA_GENE_SET_MIN_ABS_M               => 0;
+# between 0 and 1
+const our $CTK_DATA_GENE_SET_MAX_P                   => 1;
+
+# Affymetrix
+const our $CTK_AFFY_ANNOT_NETAFFX_VERSION            => 'na32';
+
+# GSEA
+const our $GSEA_MSIGDB_VERSION                       => '3.1';
+const our $CTK_GSEA_JAVA_PATH                        => 'java';
+const our $CTK_GSEA_NUM_PERMUTATIONS                 => 1500;
+const our $CTK_GSEA_MAX_JAVA_HEAP_SIZE               => '2048m';
+const our $CTK_GSEA_DEFAULT_SCORING_SCHEME           => 'weighted';
+const our $CTK_GSEA_GENE_SET_MIN                     => $CTK_DATA_FILE_MIN_GENE_SET_SIZE;
+const our $CTK_GSEA_GENE_SET_MAX                     => $CTK_DATA_FILE_MAX_GENE_SET_SIZE;
+# remember that limiting this also limits how many gene sets can be in leading edge matrix, etc since need detail report for computing these
+const our $CTK_GSEA_PLOT_TOP_X                       => 1000;
+
+# Confero Web
+const our $CTK_WEB_SERVER_HOST                       => 'apache_server_hostname';
+const our $CTK_WEB_SERVER_PORT                       => 3000;
+const our $CTK_DISPLAY_ID_SPACER                     => '_';
+const our $CTK_DISPLAY_ID_PREFIX                     => 'YOUR_ORGANISATION';
+const our @CTK_DISPLAY_ID_CONTRAST_SURROUND_CHARS    => qw( [ ] );
+
+1;

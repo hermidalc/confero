@@ -1,0 +1,133 @@
+<tool name="Submit Contrast Dataset" id="confero_platform_submit_contrast_dataset" version="0.0.1">
+    <description>to the Confero DB and compute and store gene sets</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl $cmd 
+        --data-file=$contrast_file 
+        --data-type="$data_type"
+        #if $id_type.value != "?"
+        --id-type="$id_type"
+            #if $id_type.value == "GeneSymbol" and $organism.value != "?"
+        --organism="$organism"
+            #end if
+        #end if
+        --orig-filename="$contrast_file.name" 
+        --report-file=$report 
+        --report-as-html
+        --no-processed-file-output
+        --collapsing-method=$collapsing_method
+        #if $cmd.value == False
+        --dataset-name="$dataset_name" 
+        --dataset-desc="$dataset_desc" 
+            #if $overwrite_existing.value == True
+        --overwrite-existing
+            #end if
+            #if $skip_threshold_checks.value == True
+        --skip-threshold-checks
+            #end if
+        #end if
+    </command>
+    <inputs>
+        <param name="contrast_file" type="data" format="ctkcontrastdataset" label="Contrast Dataset File to Check, Process and Submit"/>
+        <param name="id_type" type="select" force_select="false" optional="true" label="Contrast Dataset IDs From" dynamic_options="cfo_get_info('id_types', True)">
+            <help>Select ID type if not already set in data file header</help>
+        </param>
+        <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+            <help>Select organism if not already set in data file header AND your IDs are gene symbols</help>
+        </param>
+        <!--
+        <conditional name="id_type_cond">
+            <param name="id_type" type="select" force_select="false" optional="true" label="Contrast Dataset IDs From" dynamic_options="cfo_get_info('id_types', True)"/>
+            <when value="EntrezGene"/>
+            <when value="GeneSymbol">
+                <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)"/>
+            </when>
+        </conditional>
+        -->
+        <param name="dataset_name" type="text" size="100" label="Dataset Name"/>
+        <param name="dataset_desc" type="text" area="true" size="5x100" label="Dataset Description">
+            <help>Please do not put manual carriage returns in the text area</help>
+        </param>
+        <param name="collapsing_method" type="select" label="Collapsing Method">
+            <option value="contrast_data">contrast data</option>
+            <option value="dataset_data">dataset data</option>
+        </param>
+        <param name="cmd" type="boolean" truevalue="process_data_file" falsevalue="process_submit_data_file" checked="false">
+            <label>Process and Check Contrast Dataset Only</label>
+            <help>
+            Check this if you want to only check and map your contrast dataset file and review the report but not submit anything to the Confero database
+            </help>
+        </param>
+        <param name="overwrite_existing" type="boolean">
+            <label>Overwrite Any Existing Dataset</label>
+            <help>
+            Check this if you want to force overwrite of all data for any existing contrast dataset in the database with the same name
+            </help>
+        </param>
+        <param name="skip_threshold_checks" type="boolean">
+            <label>Skip Gene Set Threshold Checks</label>
+            <help>
+            Check this if you want to skip any threshold checks on computed gene sets before submitting to Confero database
+            </help>
+        </param>
+        <param name="data_type" type="hidden" value="IdMAPS"/>
+    </inputs>
+    <outputs>
+        <data format="ctkreporthtml" name="report" label="$tool.name on $on_string: $contrast_file.name"/>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+This tool will check, process, map a source contrast dataset file (idMAPSMAPSMAPS...) into an 
+Entrez Gene ID-based contrast file using the latest NCBI Entrez Gene information and provide you a 
+summary report of what it did. All the contrasts in the file form a dataset.  The tool will then 
+compute the gene sets for each contrast using parameters provided or defaults and then submit the 
+dataset, contrasts, and gene sets into the Confero database.
+
+* The contrasts in a file together form a dataset.  Each individual contrast in the file is typically a single experimental condition or coefficient.
+
+* The contrast dataset file can already be Entrez Gene ID-based, in this case the tool will check, process and update the IDs in your file using the latest NCBI Entrez Gene information and also provide you a report of what it did.
+
+* The contrast dataset file can exclude any or all of the M, P or S column(s) (idA, idAAA, idAMAMAM, idMAPMAPMAP...) if you do not have these.
+
+* The contrast dataset file requires a data column header unless there is only one contrast in the dataset.
+
+* Various header metadata fields in your contrast file are supported.  These currently are:
+
+  - dataset_name
+  - dataset_desc
+  - contrast_names [multi]
+  - gs_up_sizes [multi]
+  - gs_dn_sizes [multi]
+  - gs_p_val_thres [multi]
+  - gs_m_val_thres [multi]
+  - gs_a_val_thres [multi]
+  - gs_data_split_meths [multi]
+  - gs_min_size
+  - gs_max_size
+  - id_type
+  - organism (only necessary when using gene symbols as IDs, i.e. id_type=GeneSymbol)
+
+* Various additional annotation metadata fields are supported.  These currently are:
+
+  - system
+  - study_no
+  - cell_tissue
+  - stimulus
+
+* Metadata header fields must be at the top file, before any data column header or data.  They should have the following form shown below, in this particular example we have a batch contrast file with 4 contrasts (therefore 4 contrast names)::
+
+  #%id_type="HG-U133_Plus_2"
+  #%dataset_name="Adjuvant Tamoxifen Therapy"
+  #%dataset_desc="The 76-gene signature defines high-risk patients that benefit from adjuvant tamoxifen therapy"
+  #%contrast_names="GSM305129","GSM305130","GSM305131","GSM305132"
+
+* If the metadata header dataset_name is not included, the base name of the file will be used for the dataset name.
+
+* For multi-contrast dataset files, the metadata header **contrast_names** is required.  For single-contrast dataset files, if the metadata header does not exist the uploaded contrast file basename will be used.
+
+* If you have a metadata header already defined in your file for the equivalent web page form field, then you can forgo selecting or typing anything into the web page form field.  For example, if you have id_type metatadata header defined, then you do not need to select it from the drop-down menu. 
+
+If you have nothing to choose from in the Contrast File to Check drop-down menu, then you need to 
+first go to Get Data --> Upload File in order to upload an idMAPS contrast dataset file.
+    </help>
+</tool>
+

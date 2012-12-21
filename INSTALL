@@ -1,0 +1,148 @@
+##############################################################
+# CONFERO INSTALLATION
+##############################################################
+# Requirements:
+- Perl >= 5.12
+- MySQL >= 5.1.45
+- Java >= 1.6
+
+# In case you have Galaxy installed, confero can be installed in:
+/your_galaxy_home_path/tools
+
+# Confero source code is hosted on SourceForge
+# Get Confero project:
+git clone https://git.code.sf.net/p/confero/code confero_platform
+
+# Copy and set up your local configuration file: 
+# In the folder: lib/perl5/Confero 
+cp LocalConfig.pm.sample LocalConfig.pm
+
+# Customize LocalConfig.pm for your local installation, typically you would set:
+$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_galaxy_home_path/tools/confero_platform
+$CTK_ADMIN_EMAIL_ADDRESS	# email address of the administrator
+$CTK_DB_SERVER_VERSION 		# MySQL database server version
+$CTK_DB_HOST 			# MySQL server host name
+$CTK_DB_NAME 			# MySQL database name 
+$CTK_DB_USER			# MySQL user name
+$CTK_DB_PASS			# MySQL user password
+$CTK_WEB_SERVER_HOST		# Apache server url
+$CTK_WEB_SERVER_PORT		# Apache server port
+
+##############################################################
+# Dependencies installation
+##############################################################
+# From confero_platform root directory
+# Run the dependency installer: 
+./scripts/cfo_install_deps.sh
+
+##############################################################
+# GSEA installation
+##############################################################
+# Download GSEA JAR (Java ARchive) file from http://www.broadinstitute.org/gsea/downloads.jsp
+# Copy the gsea2-x.y.jar into the /path_to_confero/opt/gsea folder
+
+# Download MSigDB datasets from http://www.broadinstitute.org/gsea/downloads.jsp
+# into the /path_to_confero/opt/gsea/data/databases folder
+# All gene sets: "msigdb.vx.y.entrez.gmt", "msigdb.vx.y.symbols.gmt"
+# and c1-c5: "c[1-5].*.vx.y.entrez.gmt", "c[1-5].*.vx.y.symbols.gmt"
+
+# Create a symbolic link to your version of gsea.jar
+cd /path_to_confero/opt/gsea
+ln -s gsea2-x.y.jar gsea.jar
+
+# You should end up with the following structure
+# This is an example with GSEA database v3.1 and gsea2-2.08.jar
+
+opt/
+└── gsea
+    ├── data
+    │   ├── databases
+    │   │   ├── c1.all.v3.1.entrez.gmt
+    │   │   ├── c1.all.v3.1.symbols.gmt
+    │   │   ├── c2.all.v3.1.entrez.gmt
+    │   │   ├── c2.all.v3.1.symbols.gmt
+    │   │   ├── c2.cgp.v3.1.entrez.gmt
+    │   │   ├── c2.cgp.v3.1.symbols.gmt
+    │   │   ├── c2.cp.biocarta.v3.1.entrez.gmt
+    │   │   ├── c2.cp.biocarta.v3.1.symbols.gmt
+    │   │   ├── c2.cp.kegg.v3.1.entrez.gmt
+    │   │   ├── c2.cp.kegg.v3.1.symbols.gmt
+    │   │   ├── c2.cp.reactome.v3.1.entrez.gmt
+    │   │   ├── c2.cp.reactome.v3.1.symbols.gmt
+    │   │   ├── c2.cp.v3.1.entrez.gmt
+    │   │   ├── c2.cp.v3.1.symbols.gmt
+    │   │   ├── c3.all.v3.1.entrez.gmt
+    │   │   ├── c3.all.v3.1.symbols.gmt
+    │   │   ├── c3.mir.v3.1.entrez.gmt
+    │   │   ├── c3.mir.v3.1.symbols.gmt
+    │   │   ├── c3.tft.v3.1.entrez.gmt
+    │   │   ├── c3.tft.v3.1.symbols.gmt
+    │   │   ├── c4.all.v3.1.entrez.gmt
+    │   │   ├── c4.all.v3.1.symbols.gmt
+    │   │   ├── c4.cgn.v3.1.entrez.gmt
+    │   │   ├── c4.cgn.v3.1.symbols.gmt
+    │   │   ├── c4.cm.v3.1.entrez.gmt
+    │   │   ├── c4.cm.v3.1.symbols.gmt
+    │   │   ├── c5.all.v3.1.entrez.gmt
+    │   │   ├── c5.all.v3.1.symbols.gmt
+    │   │   ├── c5.bp.v3.1.entrez.gmt
+    │   │   ├── c5.bp.v3.1.symbols.gmt
+    │   │   ├── c5.cc.v3.1.entrez.gmt
+    │   │   ├── c5.cc.v3.1.symbols.gmt
+    │   │   ├── c5.mf.v3.1.entrez.gmt
+    │   │   ├── c5.mf.v3.1.symbols.gmt
+    │   │   ├── msigdb.v3.1.entrez.gmt
+    │   │   └── msigdb.v3.1.symbols.gmt
+    │   └── mappings
+    ├── gsea2-2.08.jar
+    └── gsea.jar -> gsea2-2.08.jar
+
+
+##############################################################
+# Setup script
+##############################################################
+
+# Run the setup program and follow the interactive instructions: 
+./scripts/cfo_setup.pl
+# This script may need a long time to be exectued due to a large amount of
+# public data that is downloaded
+
+
+##############################################################
+# GALAXY configuration for Confero
+##############################################################
+# In your Galaxy tool_conf.xml, add Confero tools
+
+<section name="Confero Platform" id="confero_platform">
+    <label text="Data Import" id="confero_platform_data_import" />
+    <tool file="confero_platform/galaxy/upload_rlimmaobject.xml" />
+    <tool file="confero_platform/galaxy/generate_idmaps.xml" />
+    <tool file="confero_platform/galaxy/submit_contrast_dataset.xml" />
+    <tool file="confero_platform/galaxy/submit_gene_set.xml" />
+    <label text="Data Management and Export" id="confero_platform_data_mgmt_export" />
+    <tool file="confero_platform/galaxy/view_manage_data.xml" />
+    <tool file="confero_platform/galaxy/extract_gene_set_matrix.xml" />
+    <tool file="confero_platform/galaxy/extract_gene_set_overlap_matrix.xml" />
+    <tool file="confero_platform/galaxy/extract_contrast_data_subset.xml" />
+    <label text="GSEA Module" id="confero_platform_gsea_module" />
+    <tool file="confero_platform/galaxy/create_ranked_lists.xml" />
+    <tool file="confero_platform/galaxy/analyze_data.xml" />
+    <tool file="confero_platform/galaxy/extract_gsea_leading_edge_matrix.xml" />
+    <tool file="confero_platform/galaxy/extract_gsea_results_matrix.xml" />
+ </section>
+
+ # In your datatype_conf.xml, add the Confero specific data types
+<!-- Confero Platform Datatypes -->
+<datatype extension="ctkreporthtml" type="galaxy.datatypes.images:Html" subclass="True"/>
+<datatype extension="ctkcontrastdataset" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkgeneset" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkrnk" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkgsearesultshtml" type="galaxy.datatypes.images:Html" subclass="True"/>
+<datatype extension="ctkgsealeadingedgematrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkgsearesultsmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkgenesetmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="ctkgenesetoverlapmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="rlimmaobject" type="galaxy.datatypes.data:Data" subClass="true" mimetype="application/octet-stream" display_in_upload="true"/>
+
+# Restart your Galaxy instance
+

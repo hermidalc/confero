@@ -1,0 +1,35 @@
+<tool name="Extract Leading Edge Matrix" id="confero_platform_extract_gsea_leading_edge_matrix" version="0.0.1">
+    <description>from a GSEA result</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl extract_gsea_leading_edge_matrix
+        --gsea-results-dir=$gsea_search_results.extra_files_path
+        --fdr-cutoff=$fdr_cutoff
+        --output-type=$data_matrix_type
+        --output-file=$gsea_leading_edge_matrix
+        --enrichment-type="$enrichment_type"
+        #if $include_annots.value == True
+        --include-annots
+        #end if
+    </command>
+    <inputs>
+        <param name="gsea_search_results" type="data" format="ctkgsearesultshtml" label="GSEA Search Result"/>
+        <param name="enrichment_type" type="select" force_select="true" optional="false" label="Enrichment Results to Extract">
+            <option value="all">All (+/-)</option>
+            <option value="pos">Positive (+)</option>
+            <option value="neg">Negative (-)</option>
+        </param>
+        <param name="data_matrix_type" type="select" force_select="true" optional="false" label="Output Matrix Type">
+            <option value="M">Rank Metric Score</option>
+            <option value="R">Rank in List</option>
+            <option value="B">Boolean (0|1)</option>
+        </param>
+        <param name="fdr_cutoff" type="float" value="1.0" optional="true" label="FDR Cutoff"/>
+        <param name="include_annots" type="boolean" value="false" optional="true" label="Include Gene Annotations" />
+    </inputs>
+    <outputs>
+        <data format="ctkgenesetmatrix" name="gsea_leading_edge_matrix" label="Leading Edge Matrix ($enrichment_type.value_label) for $on_string: $gsea_search_results.name"/>
+    </outputs>
+    <help>
+Extract leading edge matrix from a GSEA result.
+    </help>
+</tool>

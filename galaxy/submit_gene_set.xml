@@ -1,0 +1,111 @@
+<tool name="Submit Gene Set" id="confero_platform_submit_gene_set" version="0.0.1">
+    <description>to the Confero DB</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl $cmd 
+        --data-file=$gene_set_file 
+        --data-type="$data_type"
+        #if $id_type.value != "?"
+        --id-type="$id_type"
+            #if $id_type.value == "GeneSymbol" and $organism.value != "?"
+        --organism="$organism"
+            #end if
+        #end if
+        --orig-filename="$gene_set_file.name" 
+        --report-file=$report 
+        --report-as-html
+        --no-processed-file-output
+        #if $cmd.value == False:
+        --gene-set-name="$gene_set_name" 
+        --gene-set-desc="$gene_set_desc"
+            #if $overwrite_existing.value == True
+        --overwrite-existing
+            #end if
+        #end if
+    </command>
+    <inputs>
+        <param name="gene_set_file" type="data" format="ctkgeneset" label="Gene Set File to Check, Process and Submit"/>
+        <param name="id_type" type="select" force_select="false" optional="true" label="Gene Set IDs From" dynamic_options="cfo_get_info('id_types', True)">
+            <help>Select ID type if not already set in data file header</help>
+        </param>
+        <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+            <help>Select organism if not already set in data file header AND your IDs are gene symbols</help>
+        </param>
+        <!--
+        <conditional name="id_type_cond">
+            <param name="id_type" type="select" force_select="false" optional="true" label="Gene Set IDs From" dynamic_options="cfo_get_info('id_types', True)"/>
+            <when value="EntrezGene"/>
+            <when value="GeneSymbol">
+                <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)"/>
+            </when>
+        </conditional>
+        -->
+        <param name="gene_set_name" type="text" size="100" label="Gene Set Name"/>
+        <param name="gene_set_desc" type="text" area="true" size="5x100" label="Gene Set Description">
+            <help>Please do not put manual carriage returns in the text area</help>
+        </param>
+        <param name="cmd" type="boolean" truevalue="process_data_file" falsevalue="process_submit_data_file" checked="false">
+            <label>Process and Check Gene Set Only</label>
+            <help>Check this if you want to only check and map your gene set file and review the report but not submit anything to the Confero database</help>
+        </param>
+        <param name="overwrite_existing" type="boolean">
+            <label>Overwrite Any Existing Gene Set</label>
+            <help>Check this if you want to force overwrite of all data for any existing gene set in the database with the same name</help>
+        </param>
+        <param name="data_type" type="hidden" value="IdList"/>
+    </inputs>
+    <outputs>
+        <data format="ctkreporthtml" name="report" label="$tool.name on $on_string: $gene_set_file.name"/>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+This tool will check, process, map a source gene set list file (ID list) into an
+Entrez Gene ID-based gene set file using the latest NCBI Entrez Gene information and provide you a 
+summary report of what it did. The tool will the gene set into the Confero database.
+
+* Various header metadata fields in your contrast file are supported.  These currently are:
+
+  - gene_set_name
+  - gene_set_desc
+  - organism (only necessary when using gene symbols as IDs, i.e. id_type=GeneSymbol)
+  - id_type
+
+* Various additional annotation metadata fields are supported.  These currently are:
+
+  - system
+  - study_no
+  - cell_tissue
+  - stimulus
+
+* Metadata headers must be at the top file, before any data column header or data.  They should have the following form shown below::
+
+   #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into intercellular spaces and accumulation of white blood cells and macrophages."
+   #%id_type=GeneSymbol
+   #%organism="Homo sapiens"
+
+* If the metadata header gene_set_name is not included, the base name of the file will be used for the gene set name.
+
+* Gene set file format example, e.g. Inflammatory_Response.txt::
+
+   #%dataset_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into intercellular spaces and accumulation of white blood cells and macrophages."
+   #%id_type=GeneSymbol
+   #%organism="Homo sapiens"
+   ABCF1
+   ADORA1
+   ADORA2A
+   ADORA3
+   AFAP1L2
+   AGER
+   AHSG
+   AIF1
+   ALOX15
+   ALOX5AP
+   ANXA1
+   AOAH
+   AOC3
+   AOX1
+   APCS
+   APOL3
+   BLNK
+   ...
+    </help>
+</tool>

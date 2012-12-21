@@ -1,0 +1,43 @@
+<tool name="Extract Contrast Data Subset" id="confero_platform_extract_contrast_data_subset" version="0.0.1">
+    <description>from a contrast dataset</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl extract_contrast_data_subset
+        #if $dataset_source_cond.dataset_source == "confero_db"
+        --contrast-dataset-id="$dataset_source_cond.dataset_id"
+        #else if $dataset_source_cond.dataset_source == "galaxy_history"
+        --input-file=$dataset_source_cond.dataset_file
+        --orig-filename="$dataset_source_cond.dataset_file.name"
+        #end if
+        #for $r in $dataset_source_cond.r_contrast_idxs
+        --contrast-idx=$r.contrast_idx
+        #end for
+        --output-file=$contrast_data_subset
+    </command>
+    <inputs>
+        <conditional name="dataset_source_cond">
+            <param name="dataset_source" type="select" force_select="true" optional="false" label="Select Contrast Dataset From">
+                <option value="confero_db">Confero DB</option>
+                <option value="galaxy_history">Galaxy History</option>
+            </param>
+            <when value="confero_db">
+                <param name="dataset_id" type="select" label="Contrast Dataset ID" dynamic_options="cfo_get_info('contrast_dataset_ids')"/>
+                <repeat name="r_contrast_idxs" title="Contrasts">
+                    <param name="contrast_idx" type="select" force_select="true" optional="false" dynamic_options="cfo_get_contrast_info_from_dataset('from_db', dataset_id)" label="Select a Contrast"/>
+                </repeat>
+            </when>
+            <when value="galaxy_history">
+                <param name="dataset_file" type="data" format="ctkcontrastdataset" label="Select Contrast Dataset"/>
+                <repeat name="r_contrast_idxs" title="Contrasts">
+                    <param name="contrast_idx" type="select" force_select="true" optional="false" dynamic_options="cfo_get_contrast_info_from_dataset('from_file', dataset_file.file_name)" label="Select a Contrast"/>
+                </repeat>
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data name="contrast_data_subset" format="ctkcontrastdataset" label=""/>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+Extract a subset of contrasts from an input contrast dataset in your Galaxy history or from the Confero DB
+    </help>
+</tool>

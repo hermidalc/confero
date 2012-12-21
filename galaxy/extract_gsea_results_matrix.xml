@@ -1,0 +1,34 @@
+<tool name="Extract Results Matrix" id="confero_platform_extract_gsea_results_matrix" version="0.0.1">
+    <description>from one or more GSEA results</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl extract_gsea_results_matrix
+        --gsea-results-dir=$gsea_search_results_1.extra_files_path
+        #for $r in $results
+        --gsea-results-dir=$r.gsea_search_results_2.extra_files_path
+        #end for
+        --output-file=$gsea_results_matrix
+        --columns="$gsea_columns"
+    </command>
+    <inputs>
+        <param name="gsea_search_results_1" type="data" format="ctkgsearesultshtml" label="GSEA Search Results"/>
+        <repeat name="results" title="GSEA Search Results">
+            <param name="gsea_search_results_2" type="data" format="ctkgsearesultshtml" label="GSEA Search Results"/>
+        </repeat>
+        <param name="gsea_columns" type="select" multiple="true" force_select="true" display="checkboxes" label="GSEA Columns to Output">
+            <option value="SIZE">SIZE</option>
+            <option value="ES">ES</option>
+            <option value="NES" selected="true">NES</option>
+            <option value="NOM p-val">NOM p-val</option>
+            <option value="FDR q-val" selected="true">FDR q-val</option>
+            <option value="FWER p-val">FWER p-val</option>
+            <option value="RANK AT MAX" selected="true">RANK AT MAX</option>
+            <option value="LEADING EDGE">LEADING EDGE</option>
+        </param>
+    </inputs>
+    <outputs>
+        <data format="ctkgsearesultsmatrix" name="gsea_results_matrix"/>
+    </outputs>
+    <help>
+Extract results matrix from one or more GSEA search results
+    </help>
+</tool>

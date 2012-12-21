@@ -1,0 +1,121 @@
+<tool name="Extract Gene Set Matrix" id="confero_platform_extract_gene_set_matrix" version="0.0.1">
+    <description>from multiple gene sets in Confero DB, MSigDB, GeneSigDB</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl extract_gene_set_matrix
+        #if $selection_method_cond.method == "filter_cfo_gs"
+            #if $selection_method_cond.filter_bool_expr.value != ""
+        --filter-bool-expr="$selection_method_cond.filter_bool_expr"
+            #end if
+            #if $selection_method_cond.filter_annotations.value is not None
+        --filter-annotations="$selection_method_cond.filter_annotations"
+            #end if
+            #if $selection_method_cond.filter_organisms.value is not None
+        --filter-organisms="$selection_method_cond.filter_organisms"
+            #end if
+            #if $selection_method_cond.filter_contrast_names.value is not None
+        --filter-contrast-names="$selection_method_cond.filter_contrast_names"
+            #end if
+            #if $selection_method_cond.filter_gene_set_types.value != ""
+        --filter-gene-set-types="$selection_method_cond.filter_gene_set_types"
+            #end if
+        #else if $selection_method_cond.method == "specific_cfo_gs"
+            #for $g in $selection_method_cond.contrast_gene_sets
+        --contrast-gene-set-id="$g.contrast_gene_set_id"
+            #end for
+            #for $g in $selection_method_cond.gene_sets
+        --uploaded-gene-set-id="$g.uploaded_gene_set_id"
+            #end for
+        #else if $selection_method_cond.method == "specific_gsdb_gs"
+            #for $g in $selection_method_cond.gsdb_gene_sets
+        --gsdb-gene-set-id="$g.gsdb_gene_set_id"
+            #end for
+        #else if $selection_method_cond.method == "entire_gene_set_dbs"
+        --gene-set-dbs="$selection_method_cond.gene_set_dbs"
+        #end if
+        --output-file=$gene_set_matrix
+    </command>
+    <inputs>
+        <conditional name="selection_method_cond">
+            <param name="method" type="select" optional="false" label="Gene Set Selection Method">
+                <option value="filter_cfo_gs">Confero Gene Sets Using Annotation Filters</option>
+                <option value="specific_cfo_gs">Specific Confero Gene Sets</option>
+                <option value="specific_gsdb_gs">Specific MSigDB/GeneSigDB Gene Sets</option>
+                <option value="entire_gene_set_dbs">Entire Gene Set DBs</option>
+            </param>
+            <when value="filter_cfo_gs">
+                <param name="filter_bool_expr" type="text" size="200" label="Filter Gene Sets by Free Text Expression" help="Can use ANDs and ORs to create boolean logic expressions (e.g. NFKB and TNF)"/>
+                <param name="filter_annotations" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('annotations')" refresh_on_change="true" label="Filter Confero Gene Sets by Annotations"/>
+                <!-- <param name="filter_annotation_values" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('annotation_values')" label="" /> -->
+                <param name="filter_organisms" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('organisms')" label="Filter Confero Gene Sets by Organisms"/>
+                <param name="filter_contrast_names" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('contrast_names')" label="Filter Confero Gene Sets by Contrast Names"/>
+                <param name="filter_gene_set_types" type="select" optional="true" label="Filter Confero Gene Sets by Gene Set Types">
+                    <option value="" selected="true"></option>
+                    <option value="UP">UP</option>
+                    <option value="DN">DN</option>
+                </param>
+            </when>
+            <when value="specific_cfo_gs">
+                <repeat name="contrast_gene_sets" title="Contrast Gene Sets">
+                    <param name="contrast_gene_set_id" type="select" label="Contrast Gene Set ID" dynamic_options="cfo_get_info('contrast_gene_set_ids')"/>
+                </repeat>
+                <repeat name="gene_sets" title="Uploaded Gene Sets">
+                    <param name="uploaded_gene_set_id" type="select" label="Uploaded Gene Set ID" dynamic_options="cfo_get_info('gene_set_ids')"/>
+                </repeat>
+            </when>
+            <when value="specific_gsdb_gs">
+                <repeat name="gsdb_gene_sets" title="MSigDB/GeneSigDB Gene Sets">
+                    <param name="gsdb_gene_set_id" type="select" label="MSigDB/GeneSigDB Gene Set ID">
+                        <options from_file="../tools/confero_platform/galaxy/data/id_options_gsdb_gene_sets.txt">
+                            <column name="name" index="1"/>
+                            <column name="value" index="0"/>
+                        </options>
+                    </param>
+                </repeat>
+            </when>
+            <when value="entire_gene_set_dbs">
+                <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Select From the Following Gene Set DBs">
+                    <options>
+                        <option name="All" value="cfodb,msigdb,genesigdb">
+                            <option name="Confero Gene Set DB" value="cfodb">
+                                <option name="Contrast gene sets" value="cfodb.contrasts"/>
+                                <option name="Uploaded gene sets" value="cfodb.uploads"/>
+                            </option>
+                            <option name="MSigDB" value="msigdb">
+                                <option name="C1 (positional gene sets)" value="c1.all"/>
+                                <option name="C2 (curated gene sets)" value="c2.all">
+                                    <option name="CGP (chemical and genetic perturbations)" value="c2.cgp"/>
+                                    <option name="CP (canonical pathways)" value="c2.cp">
+                                        <option name="BIOCARTA (BioCarta gene sets)" value="c2.cp.biocarta"/>
+                                        <option name="KEGG (KEGG gene sets)" value="c2.cp.kegg"/>
+                                        <option name="REACTOME (Reactome gene sets)" value="c2.cp.reactome"/>
+                                    </option>
+                                </option>
+                                <option name="C3 (motif gene sets)" value="c3.all">
+                                    <option name="MIR (microRNA targets)" value="c3.mir"/>
+                                    <option name="TFT (transcription factor targets)" value="c3.tft"/>
+                                </option>
+                                <option name="C4 (computational gene sets)" value="c4.all">
+                                    <option name="CGN (cancer gene neighborhoods)" value="c4.cgn"/>
+                                    <option name="CM (cancer modules)" value="c4.cm"/>
+                                </option>
+                                <option name="C5 (GO gene sets)" value="c5.all">
+                                    <option name="BP (GO biological process)" value="c5.bp"/>
+                                    <option name="CC (GO cellular component)" value="c5.cc"/>
+                                    <option name="MF (GO molecular function)" value="c5.mf"/>
+                                </option>
+                            </option>
+                            <option name="GeneSigDB" value="genesigdb"/>
+                        </option>
+                    </options>
+                </param>
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data format="ctkgenesetmatrix" name="gene_set_matrix" label="Gene Set Matrix"/>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+Extract gene set boolean matrix from multiple gene sets in Confero DB, MSigDB, GeneSigDB
+    </help>
+</tool>

@@ -1,0 +1,55 @@
+Confero is an integrated contrast and gene set platform for computational
+analysis and biological interpretation of omics data
+
+The Confero software is Copyright (C) 2012 Philip Morris Products S.A., Switzerland (hereinafter PMP)
+
+Confero is free software; you can redistribute it and/or modify it under the terms of
+the GNU General Public License version 2 as published by the Free Software Foundation.
+
+Confero is distributed with third party code that is not owned or controlled by PMP. Your use of such
+third party code is subject to you obtaining a valid license agreement with the relevant third party
+copyright owner. Confero is distributed with the following code:
+
+- Perl5, copyright (C) 1993-2005 by Larry Wall and others. It is free software; you
+  can redistribute it and/or modify it under the terms of either the GNU General Public
+  License (http://dev.perl.org/licenses/gpl1.html) as published by the Free Software
+  Foundation; either version 1 (http://www.fsf.org/), or (at your option) any later
+  version; or the "Artistic License" (http://dev.perl.org/licenses/artistic.html).
+  To use Confero, you have to enter into a license agreement with Larry Wall and others
+  pursuant to the relevant licensing terms (see http://dev.perl.org/licenses/).
+
+- MySQL Client Libraries, copyright (C) 2012 by Oracle Corporation and/or its affiliates.
+  For free open source projects, as Confero, the MySQL Client Libraries are available
+  underthe GNU General Public License for use with other GPL-licensed software.
+  To use Confero, you have to enter into a license agreement with Oracle Corporation
+  and/or its affiliates pursuant to the relevant licensing terms
+  (see http://www.mysql.com/about/legal/licensing/index.html).
+
+In order to be executed, Confero requires the following third party code be installed
+on your computer. Your use of such third party code is subject to you obtaining a valid
+license agreement with the relevant third party copyright owner: 
+
+- GSEA software owned and licensed by the Massachusetts Institute of Technology with
+  a principal address at 77 Massachusetts Avenue, Cambridge, MA 02139. The use of the
+  GSEA software is subject to the GSEA / MSigDB License Agreement you have to enter
+  into with the Massachusetts Institute of Technology
+  (see http://www.broadinstitute.org/cancer/software/gsea/wiki/index.php/License_info).
+
+- MySQL server, copyright (C) 2012 by Oracle Corporation and/or its affiliates.
+  For free open source projects, as Confero, the MySQL Client Libraries are available
+  underthe GNU General Public License for use with other GPL-licensed software.
+  To use Confero, you have to enter into a license agreement with Oracle Corporation
+  and/or its affiliates pursuant to the relevant licensing terms
+  (see http://www.mysql.com/about/legal/licensing/index.html).
+
+IT IS YOUR RESPONSIBILITY TO OBTAIN VALID THIRD PARTY LICENSES REQUIRED BY THE THIRD
+PARTY SOFTWARE REFERENCED HEREIN AND IT IS YOUR RESPONSIBILITY TO ENSURE YOU COMPLY
+WITH THOSE LICENSES. 
+
+Confero is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License version 2 along
+with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+Street, Fifth Floor, Boston, MA  02110-1301, USA.

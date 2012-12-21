@@ -1,0 +1,135 @@
+<tool name="Analyze Data" id="confero_platform_analyze_data" version="0.0.1">
+    <description>for gene set enrichment using Confero DB, MSigDB, GeneSigDB collections</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl analyze_data 
+        --input-file=$ranked_list 
+        --orig-filename="$ranked_list.name"
+        #if $id_type.value != "?"
+        --id-type="$id_type"
+            #if $id_type.value == "GeneSymbol" and $organism.value != "?"
+        --organism="$organism"
+            #end if
+        #end if
+        --report-file=$analysis_results
+        --data-type="$data_type"
+        --report-output-dir=$analysis_results.extra_files_path 
+        --analysis-algorithm="$analysis_alg_cond.analysis_alg"
+        #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
+        --scoring-scheme="$analysis_alg_cond.scoring_scheme"
+        #end if
+        #if $analysis_alg_cond.gene_set_dbs.value is not None
+        --gene-set-dbs="$analysis_alg_cond.gene_set_dbs"
+        #end if
+        #if $analysis_alg_cond.filter_bool_expr.value != ""
+        --filter-bool-express="$analysis_alg_cond.filter_bool_expr"
+        #end if
+        #if $analysis_alg_cond.filter_annotations.value is not None
+        --filter-annotations="$analysis_alg_cond.filter_annotations"
+        #end if
+        #if $analysis_alg_cond.filter_organisms.value is not None
+        --filter-organisms="$analysis_alg_cond.filter_organisms"
+        #end if
+        #if $analysis_alg_cond.filter_contrast_names.value is not None
+        --filter-contrast-names="$analysis_alg_cond.filter_contrast_names"
+        #end if
+        #if $analysis_alg_cond.filter_gene_set_types.value != ""
+        --filter-gene-set-types="$analysis_alg_cond.filter_gene_set_types"
+        #end if
+        #if $analysis_alg_cond.do_ar_analysis.value == True
+        --do-ar-analysis
+        #end if
+    </command>
+    <inputs>
+        <param name="ranked_list" type="data" format="ctkrnk" label="Input Ranked List to Analyze">
+            <help>
+            The input file should be a ranked list in the following format: 
+            a two-column tab-delimited file where the first column are your IDs and 
+            the second column are your ranks (which are typically the statistic metric
+            t-test (S) or log2 fold change (M)). You do not need a column header.
+            </help>
+        </param>
+        <param name="id_type" type="select" force_select="false" optional="true" label="Query IDs From" dynamic_options="cfo_get_info('id_types', True)">
+            <help>Select ID type if not already set in file header</help>
+        </param>
+        <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+            <help>Select organism if not already set in file header AND your IDs are gene symbols</help>
+        </param>
+        <conditional name="analysis_alg_cond">
+            <param name="analysis_alg" type="select" force_select="true" optional="false" label="Analysis Algorithm">
+                <option value="GseaPreranked" selected="true">GSEA Preranked</option>
+                <!--
+                <option value="GseaSimple">GSEA Simple</option>
+                <option value="RunningFishers">Running Fisher's Exact Test</option>
+                -->
+            </param>
+            <!--
+            <when value="RunningFishers"/>
+            -->
+            <when value="GseaPreranked">
+                <param name="scoring_scheme" type="select" force_select="true" optional="false" label="Scoring Scheme">
+                    <option value="weighted" selected="true">weighted</option>
+                    <option value="weighted_p2">weighted_p2</option>
+                    <option value="weighted_p1.5">weighted_p1.5</option>
+                </param>
+                <param name="do_ar_analysis" type="boolean" label="Perform AR-only Gene Set Analysis" help="applies only to MSigDB C2 CGP and Confero DB"/>
+                <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
+                    <options>
+                        <option name="All" value="cfodb,msigdb,genesigdb">
+                            <option name="Confero Gene Set DB" value="conferodb">
+                                <option name="Contrast gene sets" value="cfodb.contrasts"/>
+                                <option name="Uploaded gene sets" value="cfodb.uploads"/>
+                            </option>
+                            <option name="MSigDB" value="msigdb">
+                                <option name="C1 (positional gene sets)" value="c1.all"/>
+                                <option name="C2 (curated gene sets)" value="c2.all">
+                                    <option name="CGP (chemical and genetic perturbations)" value="c2.cgp"/>
+                                    <option name="CP (canonical pathways)" value="c2.cp">
+                                        <option name="BIOCARTA (BioCarta gene sets)" value="c2.cp.biocarta"/>
+                                        <option name="KEGG (KEGG gene sets)" value="c2.cp.kegg"/>
+                                        <option name="REACTOME (Reactome gene sets)" value="c2.cp.reactome"/>
+                                    </option>
+                                </option>
+                                <option name="C3 (motif gene sets)" value="c3.all">
+                                    <option name="MIR (microRNA targets)" value="c3.mir"/>
+                                    <option name="TFT (transcription factor targets)" value="c3.tft"/>
+                                </option>
+                                <option name="C4 (computational gene sets)" value="c4.all">
+                                    <option name="CGN (cancer gene neighborhoods)" value="c4.cgn"/>
+                                    <option name="CM (cancer modules)" value="c4.cm"/>
+                                </option>
+                                <option name="C5 (GO gene sets)" value="c5.all">
+                                    <option name="BP (GO biological process)" value="c5.bp"/>
+                                    <option name="CC (GO cellular component)" value="c5.cc"/>
+                                    <option name="MF (GO molecular function)" value="c5.mf"/>
+                                </option>
+                            </option>
+                            <option name="GeneSigDB" value="genesigdb"/>
+                        </option>
+                    </options>
+                </param>
+                <param name="filter_bool_expr" type="text" size="200" label="Filter Gene Sets by Free Text Expression" help="Can use ANDs and ORs to create boolean logic expressions (e.g. NFKB and TNF)"/>
+                <param name="filter_annotations" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('annotations')" refresh_on_change="true" label="Filter Confero Gene Sets by Annotations"/>
+                <!-- <param name="filter_annotation_values" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('annotation_values')" label="" /> -->
+                <param name="filter_organisms" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('organisms')" label="Filter Confero Gene Sets by Organisms"/>
+                <param name="filter_contrast_names" type="select" multiple="true" optional="true" dynamic_options="cfo_get_info('contrast_names')" label="Filter Confero Gene Sets by Contrast Names"/>
+                <param name="filter_gene_set_types" type="select" optional="true" label="Filter Confero Gene Sets by Gene Set Types">
+                    <option value="" selected="true"></option>
+                    <option value="UP">UP</option>
+                    <option value="DN">DN</option>
+                </param>
+            </when>
+        </conditional>
+        <param name="data_type" type="hidden" value="RankedList"/>
+    </inputs>
+    <outputs>
+        <!-- broken value_label 
+        <data format="ctkgsearesultshtml" name="analysis_results" label="$analysis_alg_cond.analysis_alg.value_label Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $ranked_list.name"/>
+        -->
+        <data format="ctkgsearesultshtml" name="analysis_results" label="GSEA Preranked Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $ranked_list.name"/>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+This tool will analyze data for gene set enrichment using the Confero gene set DB, MSigDB, and GeneSigDB collections.
+    </help>
+</tool>
+

@@ -1,0 +1,97 @@
+<tool name="Convert LIMMA/SAM R object" id="confero_platform_generate_idmaps" version="0.0.1">
+	<description>into a contrast dataset idMAPS file</description>
+	<command interpreter="bash">r_wrapper.sh $script_file</command>
+	<inputs>
+		<param name="file_selected" type="data"
+			label="limma/samr R object file to process" format="rlimmaobject" refresh_on_change="true" />
+		<repeat name="contrasts_series" title="Gene set creation parameter">
+			<param name="contrast_selected" type="select" label="Select a contrast"
+				force_select="true" optional="false" dynamic_options="get_contrast_list(file_selected.file_name)" />
+			<param name="p_value_threshold" type="float" value="0.05"
+				label="p-value threshold value" />
+		</repeat>
+		<param name="delta" type="float" optional="true" value="0.001"
+				label="Delta value (only for samr object)" />
+				
+		<param name="dataset_name" type="text" size="100" label="Dataset Name" />
+		<param name="dataset_desc" type="text" area="true" size="5x100"
+			label="Dataset Description" help="Please do not put manual carriage returns in the text area." />
+		<param name="id_type" type="select" force_select="false" optional="true" label="Contrast Dataset IDs From" dynamic_options="cfo_get_info('id_types', True)">
+            <help>Select ID type if not already set in file header</help>
+        </param>
+        <!--
+        <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+            <help>Select organism if not already set in file header AND your IDs are gene symbols</help>
+        </param>
+        -->
+	</inputs>
+	<configfiles>
+		<configfile name="script_file">
+			## Setup R error handling to go to stderr
+			options( show.error.messages=FALSE,error = function () {cat(geterrmessage(), file=stderr() ); q( "no", 1, F) } )
+			# redirect output to NULL
+			#sink("/dev/null")
+			suppressPackageStartupMessages(library(limma))
+			dataset.name ="${dataset_name}"
+			dataset.desc = "${dataset_desc}"
+			id.type ="${id_type}"
+			root.dir = "${__root_dir__}"
+			data.path ="${file_selected}"
+			dest.path = "${idmaps_file}"
+			pv.thres = vector()
+			ct.names = vector()
+			delta = ${delta}
+			all.selected = FALSE
+			#for $i, $s in enumerate($contrasts_series)
+				if ("${s.contrast_selected}"=="All") {
+					all.selected=TRUE
+					all.pv.thres=${s.p_value_threshold}
+				}
+				pv.thres = c(pv.thres, ${s.p_value_threshold})
+        		ct.names = c(ct.names, "${s.contrast_selected}")
+      		#end for
+      		names(pv.thres) = ct.names 
+			source(paste(root.dir,"/tools/confero_platform/galaxy/generate_idmaps.R",sep=""))
+			generate.idmaps(file.path=data.path,name=dataset.name,desc=dataset.desc,id=id.type,dest=dest.path,ct.pthres.selected=pv.thres,delta=delta,all.selected=all.selected,all.pv.thres=all.pv.thres)
+		</configfile>
+	</configfiles>
+	<code file="get_r_contrasts.py"/>
+    <code file="common_functions.py"/>
+	<outputs>
+		<data format="ctkcontrastdataset" name="idmaps_file"
+			label="idMAPS file from data ($on_string): ${file_selected.name}" />
+	</outputs>
+	<help>
+This tool will convert the limma/samr R object into a contrast dataset file (idMAPS).
+
+-----
+
+.. class:: infomark
+
+If you have nothing to choose from in the 'LIMMA or SAMR R data file to process' drop-down menu,
+then you need to first go to Get Data --> Upload File in order to upload an rlimmaobject file.
+
+-----
+
+.. class:: warningmark
+
+**limma R object**
+
+In case the R object provided as input is related to a LIMMA workflow analysis, please ensure that the limma R object selected
+is an 'MArrayLM' R object given from the 'eBayes' function and saved using the R 'save' function.
+This tool uses the 'limma' package from R. Please ensure that this package is installed in your R library in order to process the input.
+
+-----
+
+.. class:: warningmark
+
+**samr R object**
+
+In case the R object provided as input is related to a SAMR workflow analysis, please ensure that the object selected
+is a dataset generated according the 'samr' package documentation_.(in the example, the object data should be saved and provided as input)
+This tool uses the 'samr' package functions from R statistical package to
+perform contrast extraction on the input data. Please ensure that this package is installed in you R library in order to process this input.
+
+.. _documentation: http://cran.r-project.org/web/packages/samr/samr.pdf
+	</help>
+</tool>
