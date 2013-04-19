@@ -4,10 +4,8 @@
 # Requirements:
 - Perl >= 5.12
 - MySQL >= 5.1.45
-- Java >= 1.6
+- Java >= 1.6 (only required if you want to use GSEA)
 
-# In case you have Galaxy installed, confero can be installed in:
-/your_galaxy_home_path/tools
 
 # Confero source code is hosted on SourceForge
 # Get Confero project:
@@ -18,7 +16,7 @@ git clone https://git.code.sf.net/p/confero/code confero_platform
 cp LocalConfig.pm.sample LocalConfig.pm
 
 # Customize LocalConfig.pm for your local installation, typically you would set:
-$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_galaxy_home_path/tools/confero_platform
+$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_install_path/tools/confero_platform
 $CTK_ADMIN_EMAIL_ADDRESS	# email address of the administrator
 $CTK_DB_SERVER_VERSION 		# MySQL database server version
 $CTK_DB_HOST 			# MySQL server host name
@@ -36,12 +34,14 @@ $CTK_WEB_SERVER_PORT		# Apache server port
 ./scripts/cfo_install_deps.sh
 
 ##############################################################
-# GSEA installation
+# GSEA installation (OPTIONAL)
 ##############################################################
 # Download GSEA JAR (Java ARchive) file from http://www.broadinstitute.org/gsea/downloads.jsp
+# This file is subject to third party license, see DISCLAIMER file.
 # Copy the gsea2-x.y.jar into the /path_to_confero/opt/gsea folder
 
 # Download MSigDB datasets from http://www.broadinstitute.org/gsea/downloads.jsp
+# These files are subject to third party license, see DISCLAIMER file.
 # into the /path_to_confero/opt/gsea/data/databases folder
 # All gene sets: "msigdb.vx.y.entrez.gmt", "msigdb.vx.y.symbols.gmt"
 # and c1-c5: "c[1-5].*.vx.y.entrez.gmt", "c[1-5].*.vx.y.symbols.gmt"
@@ -109,8 +109,12 @@ opt/
 
 
 ##############################################################
-# GALAXY configuration for Confero
+# GALAXY configuration for Confero (OPTIONAL)
 ##############################################################
+
+# In case you want to use Galaxy, confero can be installed in:
+/your_galaxy_home_path/tools
+
 # In your Galaxy tool_conf.xml, add Confero tools
 
 <section name="Confero Platform" id="confero_platform">
@@ -145,4 +149,82 @@ opt/
 <datatype extension="rlimmaobject" type="galaxy.datatypes.data:Data" subClass="true" mimetype="application/octet-stream" display_in_upload="true"/>
 
 # Restart your Galaxy instance
+
+    
+##############################################################
+# Command line usage
+##############################################################
+
+Environment Setup
+-----------------
+    
+For convenience you could create and export an environment variable $CONFERO_HOME:
+
+CONFERO_HOME=/where_you_checked_out/confero_platform
+export CONFERO_HOME
+PATH=$CONFERO_HOME/bin:$PATH
+
+
+    
+Confero command wrapper
+-----------------------
+    
+The Confero command runner is:
+
+cfo_run_cmd.pl --help
+Usage:
+  cfo_run_cmd.pl [command] [options]
+  
+  Commands:
+      process_data_file                  Check and process a data file (e.g. contrast data set, gene set list)
+      process_submit_data_file           Check, process and submit a data file (e.g. contrast data set, gene set list)
+      create_ranked_lists                Create ranked list expression profiles from a contrast dataset or contrast file or one in Confero DB
+      analyze_data                       Analyze data for gene set enrichment using Confero DB, MSigDB, GeneSigDB, etc. gene set collections
+      extract_gsea_leading_edge_matrix   Extract GSEA leading edge matrix from a GSEA result
+      extract_gsea_results_matrix        Extract GSEA results data matrix from one or more GSEA results
+      extract_gene_set_matrix            Extract gene set matrix from specific gene sets or one or more gene set databases
+      extract_gene_set_overlap_matrix    Extract gene set overlap matrix from a gene set matrix or GSEA leading edge matrix
+      extract_contrast_data_subset       Extract a subset of contrasts from an contrast dataset file or one in Confero DB
+
+  Options:
+      --help                             Print usage message and exit
+
+  Run cfo_run_cmd.pl [command] --help for command options
+
+
+    
+Process (and Submit) Data File
+------------------------------
+Examples
+
+To process and check outputs without doing database submission:
+
+cfo_run_cmd.pl process_data_file \
+--data-file=/path/to/input_data_file.txt \
+--data-type=idMAPS \
+--report-file=/path/to/processing_report.txt \
+--processed-file=/path/to/processed_data_file.txt
+
+Or for convenience:
+
+cfo_process_data_file.pl \
+--data-file=/path/to/input_data_file.txt \
+--data-type=idMAPS \
+--report-file=/path/to/processing_report.txt \
+--processed-file=/path/to/processed_data_file.txt
+
+To output processed file to STDOUT and ignore report:
+
+cfo_process_data_file.pl \
+--data-file=/path/to/input_data_file.txt \
+--data-type=idMAPS
+
+To process and submit to database:
+
+cfo_run_cmd.pl process_submit_data_file \
+--data-file=/path/to/input_data_file.txt \
+--data-type=idMAPS \
+--report-file=/path/to/processing_report.txt \
+--processed-file=/path/to/processed_data_file.txt
+
 
