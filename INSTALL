@@ -16,7 +16,7 @@ git clone https://git.code.sf.net/p/confero/code confero_platform
 cp LocalConfig.pm.sample LocalConfig.pm
 
 # Customize LocalConfig.pm for your local installation, typically you would set:
-$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_install_path/tools/confero_platform
+$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_install_path/confero_platform
 $CTK_ADMIN_EMAIL_ADDRESS	# email address of the administrator
 $CTK_DB_SERVER_VERSION 		# MySQL database server version
 $CTK_DB_HOST 			# MySQL server host name
@@ -34,8 +34,9 @@ $CTK_WEB_SERVER_PORT		# Apache server port
 ./scripts/cfo_install_deps.sh
 
 ##############################################################
-# GSEA installation (OPTIONAL)
+# GSEA installation
 ##############################################################
+# OPTIONAL:
 # Download GSEA JAR (Java ARchive) file from http://www.broadinstitute.org/gsea/downloads.jsp
 # This file is subject to third party license, see DISCLAIMER file.
 # Copy the gsea2-x.y.jar into the /path_to_confero/opt/gsea folder
