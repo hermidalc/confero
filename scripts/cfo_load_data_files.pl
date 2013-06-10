@@ -21,7 +21,7 @@ use Unix::Processors;
 sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
 }
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 # Unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
@@ -46,7 +46,7 @@ pod2usage(-message => 'Missing required --data-type=<type> option') unless defin
 pod2usage(-message => 'Missing data file directory or file path') unless @ARGV and scalar(@ARGV) == 1;
 pod2usage(-message => "'$ARGV[0]' is not a valid directory or file path") unless -d $ARGV[0] or -f $ARGV[0];
 pod2usage(-message => 'Data type must be one of: IdMAPS, IdList') unless $data_type =~ /^Id(MAPS|List)$/;
-print "#", '-' x 100, "#\n",
+print "#", '-' x 120, "#\n",
       "# Confero Batch Data File Loader [" . scalar localtime() . "]\n\n";
 my @data_file_paths;
 # directory of data files
