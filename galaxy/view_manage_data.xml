@@ -1,6 +1,6 @@
 <tool name="View and Manage Data" id="confero_platform_view_manage_data" version="0.1">
     <description>in the Confero DB</description>
-    <inputs action="DANCER_URL" check_values="false" method="get">
+    <inputs action="CONFERO_WEB_SERVER_URL" check_values="false" method="get">
         <display>Go to Confero Web App $GALAXY_URL</display>
         <param name="GALAXY_URL" type="baseurl" value="/tool_runner?tool_id=confero_platform_view_manage_data"/>
     </inputs>
