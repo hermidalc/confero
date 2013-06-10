@@ -1308,7 +1308,7 @@ sub analyze_data {
                                                 $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
                                             } $gene_set->gene_set_genes;
                                             my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
-                                            print $cfo_db_contrasts_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                            print $cfo_db_contrasts_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
                                         }
                                     }
                                 }
@@ -1335,7 +1335,7 @@ sub analyze_data {
                                         $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
                                     } $gene_set->gene_set_genes;
                                     my $gene_set_id = construct_id($gene_set->name, $gene_set->contrast_name, $gene_set->type);
-                                    print $cfo_db_uploads_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                    print $cfo_db_uploads_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
                                 }
                                 close($cfo_db_uploads_gmt_fh);
                             }
@@ -1550,10 +1550,11 @@ sub analyze_data {
                 # read header
                 <$src2gene_id_map_fh>;
                 while (<$src2gene_id_map_fh>) {
+                    s/\s+$//;
                     my (undef, @gene_ids) = split /\t/;
                     for my $gene_id (@gene_ids) {
                         $gene_id =~ s/\s+//g;
-                        confess("Entrez Gene ID $gene_id in ${source_id_type}.map file is not valid") unless is_integer($gene_id);
+                        confess("Entrez Gene ID '$gene_id' in ${source_id_type}.map file is not valid") unless is_integer($gene_id);
                         $unique_gene_ids{$gene_id}++;
                     }
                 }
@@ -2078,7 +2079,7 @@ sub extract_gene_set_matrix {
                                         my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
                                         next CONTRAST_GENE_SET if %filter_contrast_gene_set_ids and !exists $filter_contrast_gene_set_ids{$gene_set_id};
                                         my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                        print $cfo_db_contrasts_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                        print $cfo_db_contrasts_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
                                     }
                                 }
                             }
@@ -2100,7 +2101,7 @@ sub extract_gene_set_matrix {
                                         $gene_set_annotations{$annotation_name} ne $filter_annotations{$annotation_name});
                                 }
                                 my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                print $cfo_db_uploads_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                print $cfo_db_uploads_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
                             }
                             close($cfo_db_uploads_gmt_fh);
                         }
@@ -2550,7 +2551,7 @@ sub _modify_gsea_enrich_results_html_file {
     #);
     #if (@a_links) {
     #    for my $a_link (@a_links) {
-    #        $a_link->attr('href', "http://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/" . $a_link->as_text);
+    #        $a_link->attr('href', "http://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/" . $a_link->as_text);
     #    }
     #}
     #else {
@@ -2609,7 +2610,7 @@ sub _modify_gsea_enrich_results_html_file {
     my $div_container = $tree->look_down('_tag', 'div');
     if ($div_container) {
         my $orig_div_content = $div_container->detach_content();
-        my $form = HTML::Element->new('form', 'method' => 'POST', 'action' => '/view');
+        my $form = HTML::Element->new('form', 'method' => 'POST', 'action' => "http://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view");
         $div_container->push_content($form);
         $form->push_content(HTML::Element->new('input', 'type' => 'submit', 'value' => 'EXTRACT'));
         $form->push_content(HTML::Element->new('~literal',
