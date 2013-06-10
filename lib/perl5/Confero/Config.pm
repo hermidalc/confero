@@ -335,7 +335,7 @@ const our %CTK_GEO_ARRAY_DATA                        => (
     },
     'GPL3877' => {
         annot_file_uri => "${GEO_ANNOT_DATA_BASE_URI}GPL3877",
-        name => 'PRHU05-S1-0006 (PC Human Operon v2 21k) ',
+        name => 'PRHU05-S1-0006 (PC Human Operon v2 21k)',
         organism => 'Homo sapiens',
     },
     'GPL6104' => {
