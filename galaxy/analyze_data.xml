@@ -2,13 +2,7 @@
     <description>for gene set enrichment using Confero DB, MSigDB, GeneSigDB collections</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl analyze_data 
-        #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
-        --input-file=$analysis_alg_cond.ranked_list 
-        --orig-filename="$analysis_alg_cond.ranked_list.name"
-        #else if $analysis_alg_cond.analysis_alg == "HyperGeoTest"
-        --input-file=$analysis_alg_cond.deg_list
-        --orig-filename="$analysis_alg_cond.deg_list.name"
-         #end if
+        --analysis-algorithm="$analysis_alg_cond.analysis_alg"
         --data-type="$data_type"
         #if $analysis_alg_cond.id_type.value != "?"
         --id-type="$analysis_alg_cond.id_type"
@@ -16,36 +10,38 @@
         --organism="$analysis_alg_cond.organism"
             #end if
         #end if
-        --analysis-algorithm="$analysis_alg_cond.analysis_alg"
         #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
+        --input-file=$analysis_alg_cond.ranked_list 
+        --orig-filename="$analysis_alg_cond.ranked_list.name"
         --report-file=$gsea_analysis_results
         --report-output-dir=$gsea_analysis_results.extra_files_path
-        #else if $analysis_alg_cond.analysis_alg == "HyperGeoTest"
-        --report-file=$hyperg_analysis_results
-        #end if
-        #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
         --scoring-scheme="$analysis_alg_cond.scoring_scheme"
+            #if $analysis_alg_cond.filter_bool_expr.value != ""
+        --filter-bool-express="$analysis_alg_cond.filter_bool_expr"
+            #end if
+            #if $analysis_alg_cond.filter_annotations.value is not None
+        --filter-annotations="$analysis_alg_cond.filter_annotations"
+            #end if
+            #if $analysis_alg_cond.filter_organisms.value is not None
+        --filter-organisms="$analysis_alg_cond.filter_organisms"
+            #end if
+            #if $analysis_alg_cond.filter_contrast_names.value is not None
+        --filter-contrast-names="$analysis_alg_cond.filter_contrast_names"
+            #end if
+            #if $analysis_alg_cond.filter_gene_set_types.value != ""
+        --filter-gene-set-types="$analysis_alg_cond.filter_gene_set_types"
+            #end if
+            #if $analysis_alg_cond.do_ar_analysis.value == True
+        --do-ar-analysis
+            #end if        
+        #else if $analysis_alg_cond.analysis_alg == "HyperGeoTest"
+        --input-file=$analysis_alg_cond.deg_list
+        --orig-filename="$analysis_alg_cond.deg_list.name"
+        --report-file=$hyperg_analysis_results
+        --p-val-cutoff=$analysis_alg_cond.p_val_cutoff
         #end if
         #if $analysis_alg_cond.gene_set_dbs.value is not None
         --gene-set-dbs="$analysis_alg_cond.gene_set_dbs"
-        #end if
-        #if $analysis_alg_cond.filter_bool_expr.value != ""
-        --filter-bool-express="$analysis_alg_cond.filter_bool_expr"
-        #end if
-        #if $analysis_alg_cond.filter_annotations.value is not None
-        --filter-annotations="$analysis_alg_cond.filter_annotations"
-        #end if
-        #if $analysis_alg_cond.filter_organisms.value is not None
-        --filter-organisms="$analysis_alg_cond.filter_organisms"
-        #end if
-        #if $analysis_alg_cond.filter_contrast_names.value is not None
-        --filter-contrast-names="$analysis_alg_cond.filter_contrast_names"
-        #end if
-        #if $analysis_alg_cond.filter_gene_set_types.value != ""
-        --filter-gene-set-types="$analysis_alg_cond.filter_gene_set_types"
-        #end if
-        #if $analysis_alg_cond.do_ar_analysis.value == True
-        --do-ar-analysis
         #end if
     </command>
     <inputs>
@@ -85,7 +81,7 @@
                 <param name="do_ar_analysis" type="boolean" label="Perform AR-only Gene Set Analysis" help="applies only to MSigDB C2 CGP and Confero DB"/>
                 <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
                     <options>
-                        <option name="All" value="cfodb,msigdb,genesigdb">
+                        <option name="All (Confero, MSigDB, GeneSigDB)" value="cfodb,msigdb,genesigdb">
                             <option name="Confero Gene Set DB" value="conferodb">
                                 <option name="Contrast gene sets" value="cfodb.contrasts"/>
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
@@ -114,6 +110,7 @@
                                     <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
                                 </option>
                                 <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
+                                <option name="C7 (immunologic signatures)" value="msigdb.c7"/>
                             </option>
                             <option name="GeneSigDB" value="genesigdb"/>
                         </option>
@@ -147,7 +144,7 @@
                 <param name="p_val_cutoff" type="float" value="0.05" optional="true" label="P Value Cutoff"/>
                 <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
                     <options>
-                        <option name="All" value="msigdb,genesigdb">
+                        <option name="All (MSigDB, GeneSigDB)" value="msigdb,genesigdb">
                             <option name="MSigDB" value="msigdb">
                                 <option name="C1 (positional gene sets)" value="msigdb.c1"/>
                                 <option name="C2 (curated gene sets)" value="msigdb.c2">
@@ -172,6 +169,7 @@
                                     <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
                                 </option>
                                 <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
+                                <option name="C7 (immunologic signatures)" value="msigdb.c7"/>
                             </option>
                             <option name="GeneSigDB" value="genesigdb"/>
                         </option>
