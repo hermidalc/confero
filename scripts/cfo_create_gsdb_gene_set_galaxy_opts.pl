@@ -30,9 +30,11 @@ print "#", '-' x 120, "#\n",
 my %gene_set_names;
 my $num_total_gene_sets_parsed = 0;
 for my $gsdb_file_name (natsort values %CTK_GSEA_GSDBS) {
-    # skip the msigdb all gmt
-    next unless $gsdb_file_name =~ /^(c|g)/;
+    # skip msigdb all gmt
+    next if $gsdb_file_name =~ /^msigdb/;
     my $gsdb_file_path = "$CTK_GSEA_GENE_SET_DB_DIR/$gsdb_file_name";
+    # skip if doen't exist
+    next unless -e $gsdb_file_path;
     my $num_gene_sets_parsed = 0;
     print "Parsing $gsdb_file_name: ";
     open(my $gsdb_fh, '<', $gsdb_file_path) or die "Could not open $gsdb_file_path: $!\n";
