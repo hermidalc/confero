@@ -11,7 +11,7 @@ use Getopt::Long qw(:config auto_help auto_version);
 use JSON qw(encode_json);
 use Pod::Usage qw(pod2usage);
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 my $as_tuples = 0;
 my $get_idxs  = 0;
