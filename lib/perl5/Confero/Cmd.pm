@@ -26,17 +26,16 @@ use Pod::Usage qw(pod2usage);
 use Sort::Key qw(nsort nkeysort rnkeysort rnkeysort_inplace);
 use Sort::Key::Natural qw(natsort);
 use Sort::Key::Multi qw(srnkeysort nrnkeysort_inplace);
-use Storable qw(lock_retrieve);
 use Statistics::Basic qw(median);
 use Text::CSV;
-use Utils qw(curr_sub_name is_numeric intersect_arrays remove_shell_metachars escape_shell_metachars);
+use Utils qw(curr_sub_name is_integer is_numeric intersect_arrays remove_shell_metachars escape_shell_metachars);
 use Data::Dumper;
 
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Terse = 1;
 $Data::Dumper::Deepcopy = 1;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 const my $WORKING_DIR => cwd();
 const my $CTK_DISPLAY_ID_GENE_SET_SUFFIX_PATTERN => join('|', map(quotemeta, @CTK_DATA_CONTRAST_GENE_SET_TYPE_SUFFIXES));
@@ -699,6 +698,7 @@ sub submit_data_file {
                                 [qw( contrast_gene_set_id gene_id rank )],
                                 @gene_set_gene_data,
                             ]);
+                            # better faster populate used above
                             #for my $gene_id (@{$gene_sets_arrayref->[$contrast_idx]->{$gene_set_type_key}->{ids}}) {
                             #    $sth_insert_contrast_gene_set_gene->execute($gene_set->id, $gene_id, $rank);
                             #    #my $gene = defined $genes_hashref 
@@ -712,7 +712,7 @@ sub submit_data_file {
             }
             # gene set submission
             else {
-                # not needed anymore
+                # not needed anymore, efficient and fast DBIx::Class methods used now
                 # DBIx::Class (or any ORM) is a too slow during full CTK data reprocessing and reload when it has to insert
                 # many thousands of gene_set_gene entries using add_to_genes method.  So I don't use
                 # DBIx::Class here and go straight for the underlying DBI calls to speed up performance greatly
@@ -721,7 +721,7 @@ sub submit_data_file {
                 if (!$reprocess_submission) {
                     # MySQL has broken logic for multi-column UNIQUE CONSTRAINTs/KEYs/INDEXs if you have NULL values, 
                     # i.e. it does not just check non-NULL constraint columns for uniqueness and considers NULLs not
-                    # the same but unique; so must do this logic in application code always prevent duplicates from being inserted
+                    # the same but unique; so must do this logic in application code to always prevent duplicates from being inserted
                     if (my $existing_db_obj = $cfo_db->resultset('GeneSet')->find({
                         name => $input_data_file->gene_set_name,
                         contrast_name => $input_data_file->contrast_name,
@@ -769,7 +769,7 @@ sub submit_data_file {
                         }
                     }
                 }
-                # for reprocessing only need to update gene set data processing reportrank_counter
+                # for reprocessing only need to update gene set data processing report
                 else {
                     $set_db_obj->update({
                         data_processing_report => $report_str,
@@ -782,13 +782,14 @@ sub submit_data_file {
                                        ? map { [ $set_db_obj->id, $_, ++$rank_counter ] }       map { $_->[0] } @{$input_data_file->processed_data}
                                        : map { [ $set_db_obj->id, $_, undef           ] } nsort map { $_->[0] } @{$input_data_file->processed_data};
                 # create new gene_set_genes
+                # old method not used anymore, better and faster populate() method used instead
+                #for my $gene_id (nsort map { $_->[0] } @{$input_data_file->processed_data}) {
+                #    $sth_insert_gene_set_gene->execute($set_db_obj->id, $gene_id);
+                #}
                 $cfo_db->populate('GeneSetGene', [
                     [qw( gene_set_id gene_id rank )],
                     @gene_set_gene_data,
                 ]);
-                #for my $gene_id (nsort map { $_->[0] } @{$input_data_file->processed_data}) {
-                #    $sth_insert_gene_set_gene->execute($set_db_obj->id, $gene_id);
-                #}
             }
         };
         # start a new transaction if I'm not reprocess submitting, otherwise just execute coderef because I'm already in a transaction
@@ -815,7 +816,7 @@ sub submit_data_file {
     return $set_db_obj;
 }
 
-sub create_ranked_lists {
+sub create_rnk_deg_lists {
     my $self = shift;
     # arguments
     # required: [input contrast dataset file path] OR [Confero dataset or contrast ID], [ID type], [rank column], [output file path]
@@ -849,17 +850,21 @@ sub create_ranked_lists {
         }
         if (defined $output_file_galaxy_id and (!defined $output_dir_path or !defined $output_file_path)) {
             pod2usage(
-                -message => 'Bad parameters: for Galaxy multi ranked list output need all --output-file-galaxy-id, --output-file and --output-dir',
+                -message => 'Bad parameters: for Galaxy multiple ranked or DEG list output need all --output-file-galaxy-id, --output-file and --output-dir',
                 -verbose => 0,
             );
         }
+        if (defined $rank_column and $rank_column !~ /^(S|M|P)$/i) {
+            pod2usage(-message => "Invalid rank column $rank_column")
+        }
     }
     $rank_column ||= 'S';
+    $rank_column = uc($rank_column);
     $output_id_type ||= 'EntrezGene';
     # get EntrezGene singleton data
     my $gene_info_hashref = Confero::EntrezGene->instance()->gene_info;
     my $add_gene_info_hashref = Confero::EntrezGene->instance()->add_gene_info;
-    my ($dataset_name, $organism_name, @contrast_data_hashrefs);
+    my ($dataset_name, $organism_name, $source_id_type, @contrast_data_hashrefs);
     my @input_errors;
     # input Confero data ID
     if (defined $data_id) {
@@ -867,11 +872,11 @@ sub create_ranked_lists {
         if (is_valid_id($data_id)) {
             ($dataset_name, my $contrast_name) = deconstruct_id($data_id);
             eval {
-                my $ctk_db = Confero::DB->new();
-                $ctk_db->txn_do(sub {
+                my $cfo_db = Confero::DB->new();
+                $cfo_db->txn_do(sub {
                     # contrast dataset
                     if (defined $dataset_name and !defined $contrast_name) {
-                        if (my $dataset = $ctk_db->resultset('ContrastDataSet')->find({
+                        if (my $dataset = $cfo_db->resultset('ContrastDataSet')->find({
                             name => $dataset_name,
                         },{
                             prefetch => [
@@ -883,6 +888,7 @@ sub create_ranked_lists {
                         })) {
                             $organism_name = $dataset->organism->name;
                             $dataset_name = $dataset->name;
+                            $source_id_type = $dataset->source_data_file_id_type;
                             my @contrasts = $dataset->contrasts;
                             for my $contrast (@contrasts) {
                                 push @contrast_data_hashrefs, {
@@ -897,7 +903,7 @@ sub create_ranked_lists {
                     }
                     # contrast
                     elsif (defined $dataset_name and defined $contrast_name) {
-                        if (my $dataset = $ctk_db->resultset('ContrastDataSet')->find({
+                        if (my $dataset = $cfo_db->resultset('ContrastDataSet')->find({
                                 name => $dataset_name,
                             },{
                                 prefetch => 'organism',
@@ -909,6 +915,7 @@ sub create_ranked_lists {
                             })) {
                                 $organism_name = $dataset->organism->name;
                                 $dataset_name = $dataset->name;
+                                $source_id_type = $dataset->source_data_file_id_type;
                                 push @contrast_data_hashrefs, {
                                     name => $contrast->name,
                                     file_data_ref => \$contrast->data_file->data,
@@ -941,6 +948,7 @@ sub create_ranked_lists {
         if (!@{$input_data_file->data_errors}) {
             $dataset_name = $input_data_file->dataset_name;
             $organism_name = $input_data_file->organism_name;
+            $source_id_type = $input_data_file->id_type;
             for my $contrast_idx (0 .. $#{$input_data_file->processed_data}) {
                 # need to do this special initialization instead of just putting the 'my' within the 
                 # open statement because of Perl in-memory file weirdness and initialization warnings
@@ -975,7 +983,7 @@ sub create_ranked_lists {
         my @header_fields = split /\t/, $header;
         my %column_header_idxs;
         $column_header_idxs{uc($header_fields[$_])} = $_ for 1 .. $#header_fields;
-        if (!defined $column_header_idxs{uc($rank_column)}) {
+        if (!defined $column_header_idxs{$rank_column}) {
             push @input_errors, "Data column '$rank_column' doesn't exist in contrast file(s)";
         }
     }
@@ -998,17 +1006,25 @@ sub create_ranked_lists {
             if (@contrast_data_hashrefs > 1) {
                 $output_file_path = "$output_dir_path/" . (
                     defined $output_file_galaxy_id
-                        ? "primary_${output_file_galaxy_id}_$contrast_data_hashref->{name}_visible_ctkrnk"
-                        : construct_id($dataset_name, $contrast_data_hashref->{name}) . ".rnk"
+                        ? "primary_${output_file_galaxy_id}_$contrast_data_hashref->{name}_visible_cfo" . 
+                          (($rank_column eq 'S' or $rank_column eq 'M') ? 'rnk' : 'deg') . 'list'
+                        : construct_id($dataset_name, $contrast_data_hashref->{name}) . 
+                          (($rank_column eq 'S' or $rank_column eq 'M') ? '.rnk' : '.txt')
                 );
             }
             elsif (!defined $output_file_path) {
-                $output_file_path = "$output_dir_path/" . construct_id($dataset_name, $contrast_data_hashref->{name}) . ".rnk";
+                $output_file_path = "$output_dir_path/" . 
+                    construct_id($dataset_name, $contrast_data_hashref->{name}) .
+                    (($rank_column eq 'S' or $rank_column eq 'M') ? '.rnk' : '.txt');
             }
             open(my $output_fh, '>', $output_file_path) or confess("Could not create output file $output_file_path: $!");
             # write out metadata header
-            print $output_fh "#\%dataset_name=\"$dataset_name\"\n#\%contrast_name=\"$contrast_data_hashref->{name}\"\n",
-                             "#\%organism=\"", $organism_name, "\"\n#\%id_type=$output_id_type\n#\%rank_column=$rank_column\n";
+            print $output_fh "#\%dataset_name=\"$dataset_name\"\n",
+                             "#\%contrast_name=\"$contrast_data_hashref->{name}\"\n",
+                             "#\%organism=\"$organism_name\"\n",
+                             "#\%id_type=$output_id_type\n",
+                             "#\%source_id_type=$source_id_type\n",
+                             "#\%rank_column=$rank_column\n";
             open(my $contrast_fh, '<', $contrast_data_hashref->{file_data_ref}) or confess("Could not create contrast file data in-memory file: $!");
             my $header = <$contrast_fh>;
             $header =~ s/\s+$//;
@@ -1040,14 +1056,14 @@ sub analyze_data {
     # arguments
     # required: [input file path], , [data_type], [id type], [organism name], [report file path], [report directory path], [analysis algorithm]
     # optional: [analysis name], [filter annotations csv list] [filter organisms csv list] [filter gene set types csv], [filter boolean expression],
-    # GSEA: [scoring scheme], [gene set db symbols comma separated list], [do AR analysis], [additional gene set db file paths arrayref]
+    # GSEA/ORA: [scoring scheme], [gene set db symbols comma separated list], [do AR analysis], [additional gene set db file paths arrayref] [p value cutoff]
     my ($input_file_path, $data_type, $id_type, $organism_name, $report_file_path, $report_dir_path, $working_dir_path, $analysis_algorithm, 
         $analysis_name, $filter_annotations_csv, $scoring_scheme, $gene_set_dbs_csv, $filter_organisms_csv, $filter_contrast_names_csv, 
-        $filter_gene_set_types_csv, $filter_bool_expr_str, $do_ar_analysis, $gene_set_db_file_paths_arrayref, $debug);
+        $filter_gene_set_types_csv, $filter_bool_expr_str, $do_ar_analysis, $gene_set_db_file_paths_arrayref, $p_val_cutoff, $debug);
     if (@_) {
         ($input_file_path, $data_type, $id_type, $organism_name, $report_file_path, $report_dir_path, $working_dir_path, $analysis_algorithm, 
          $analysis_name, $filter_annotations_csv, $scoring_scheme, $gene_set_dbs_csv, $filter_organisms_csv, $filter_contrast_names_csv, 
-         $filter_gene_set_types_csv, $filter_bool_expr_str, $do_ar_analysis, $gene_set_db_file_paths_arrayref, $debug) = @_;
+         $filter_gene_set_types_csv, $filter_bool_expr_str, $do_ar_analysis, $gene_set_db_file_paths_arrayref, $p_val_cutoff, $debug) = @_;
     }
     else {
         Getopt::Long::Configure('no_pass_through');
@@ -1070,6 +1086,7 @@ sub analyze_data {
             'filter-contrast-names=s'       => \$filter_contrast_names_csv,
             'filter-gene-set-types=s'       => \$filter_gene_set_types_csv,
             'do-ar-analysis'                => \$do_ar_analysis,
+            'p-val-cutoff=f'                => \$p_val_cutoff,
             'debug'                         => \$debug,
         ) || pod2usage(-verbose => 0);
         pod2usage(-message => 'Missing required parameter --input-file', -verbose => 0) unless defined $input_file_path;
@@ -1092,13 +1109,15 @@ sub analyze_data {
             push @input_errors, "Working directory path $working_dir_path is not a valid directory";
         }
     }
-    push @input_errors, "$CTK_GSEA_MAPPING_FILE_DIR/GeneSymbol.chip annotation file not found" unless -f "$CTK_GSEA_MAPPING_FILE_DIR/GeneSymbol.chip";
-    push @input_errors, "$CTK_GSEA_MAPPING_FILE_DIR/EntrezGene.chip annotation file not found" unless -f "$CTK_GSEA_MAPPING_FILE_DIR/EntrezGene.chip";
+    if ($analysis_algorithm =~ /GseaPreranked/i) {
+        push @input_errors, "$CTK_GSEA_MAPPING_FILE_DIR/GeneSymbol.chip annotation file not found" unless -f "$CTK_GSEA_MAPPING_FILE_DIR/GeneSymbol.chip";
+        push @input_errors, "$CTK_GSEA_MAPPING_FILE_DIR/EntrezGene.chip annotation file not found" unless -f "$CTK_GSEA_MAPPING_FILE_DIR/EntrezGene.chip";
+    }
     if (!@input_errors) {
         if (defined $analysis_name) {
             # fix analysis_name for names generated by Galaxy dynamic multi-dataset output
-            if ($analysis_name =~ /Ranked\s+List\s+for\s+/i) {
-                $analysis_name =~ s/Ranked\s+List\s+for\s+//i;
+            if ($analysis_name =~ /(Ranked|DEG)\s+List\s+for\s+/i) {
+                $analysis_name =~ s/(Ranked|DEG)\s+List\s+for\s+//i;
                 $analysis_name =~ s/\s+\((.+?)\)$/ \[$1\]/;
                 #$analysis_name .= '.rnk';
             }
@@ -1197,27 +1216,27 @@ sub analyze_data {
                 }
                 close($output_rnk_fh);
                 # check and then map gene set DBs to file paths and names
-                my (@gene_set_db_files, $gene_set_db_files_csv, $do_ctk_db_contrasts_analysis, $do_ctk_db_uploads_analysis);
+                my (@gene_set_db_files, $gene_set_db_files_csv, $do_cfo_db_contrasts_analysis, $do_cfo_db_uploads_analysis);
                 if (defined $gene_set_dbs_csv) {
                     for my $gene_set_db (split /,/, $gene_set_dbs_csv) {
                         # Confero DB
                         if ($gene_set_db =~ /^cfodb/i) {
                             if ($gene_set_db =~ /^cfodb\.contrasts/i) {
-                                $do_ctk_db_contrasts_analysis++;
+                                $do_cfo_db_contrasts_analysis++;
                             }
                             elsif ($gene_set_db =~ /^cfodb\.uploads/i) {
-                                $do_ctk_db_uploads_analysis++;
+                                $do_cfo_db_uploads_analysis++;
                             }
                             else {
-                                $do_ctk_db_contrasts_analysis++;
-                                $do_ctk_db_uploads_analysis++;
+                                $do_cfo_db_contrasts_analysis++;
+                                $do_cfo_db_uploads_analysis++;
                             }
                         }
                         # MSigDB, GeneSigDB
                         else {
                             confess("Gene Set DB '$gene_set_db' not valid!") unless defined $CTK_GSEA_GSDBS{$gene_set_db};
                             # change up for AR-only MSigDB analysis
-                            $gene_set_db = "$1.ar" if $do_ar_analysis and $gene_set_db =~ /^(c2\.(?:all|cgp))/i;
+                            $gene_set_db = "$1.ar" if $do_ar_analysis and $gene_set_db =~ /^(msigdb\.c2\.(?:|all|cgp))/i;
                             confess("Gene Set DB '$gene_set_db' file missing!") unless -f  "$CTK_GSEA_GENE_SET_DB_DIR/$CTK_GSEA_GSDBS{$gene_set_db}";
                             push @gene_set_db_files, "$CTK_GSEA_GENE_SET_DB_DIR/$CTK_GSEA_GSDBS{$gene_set_db}";
                         }
@@ -1237,34 +1256,34 @@ sub analyze_data {
                         push @gene_set_db_files, "$working_dir_path/$gene_set_db_file_name";
                     }
                 }
-                # create snapshot gmt file of CTK gene set database(s)
+                # create snapshot gmt file of Confero gene set DB collection(s)
                 # temp file fh vars defined here because file gets deleted when out 
                 # of scope and we need it all the way through the end of the analysis
-                my ($ctk_db_contrasts_gmt_fh, $ctk_db_uploads_gmt_fh);
-                if ($do_ctk_db_contrasts_analysis or $do_ctk_db_uploads_analysis) {
-                    if ($do_ctk_db_contrasts_analysis) {
-                        $ctk_db_contrasts_gmt_fh = File::Temp->new(
+                my ($cfo_db_contrasts_gmt_fh, $cfo_db_uploads_gmt_fh);
+                if ($do_cfo_db_contrasts_analysis or $do_cfo_db_uploads_analysis) {
+                    if ($do_cfo_db_contrasts_analysis) {
+                        $cfo_db_contrasts_gmt_fh = File::Temp->new(
                             TEMPLATE => 'cfodb.contrasts.' . 'X' x 10,
                             DIR      => $working_dir_path,
                             SUFFIX   => '.gmt',
                             UNLINK   => $debug ? 0 : 1,
                         );
-                        chmod(0640, $ctk_db_contrasts_gmt_fh->filename);
+                        chmod(0640, $cfo_db_contrasts_gmt_fh->filename);
                     }
-                    if ($do_ctk_db_uploads_analysis) {
-                        $ctk_db_uploads_gmt_fh = File::Temp->new(
+                    if ($do_cfo_db_uploads_analysis) {
+                        $cfo_db_uploads_gmt_fh = File::Temp->new(
                             TEMPLATE => 'cfodb.uploads.' . 'X' x 10,
                             DIR      => $working_dir_path,
                             SUFFIX   => '.gmt',
                             UNLINK   => $debug ? 0 : 1,
                         );
-                        chmod(0640, $ctk_db_uploads_gmt_fh->filename);
+                        chmod(0640, $cfo_db_uploads_gmt_fh->filename);
                     }
                     eval {
-                        my $ctk_db = Confero::DB->new();
-                        $ctk_db->txn_do(sub {
-                            if ($do_ctk_db_contrasts_analysis) {
-                                my @contrast_datasets = $ctk_db->resultset('ContrastDataSet')->search(undef, {
+                        my $cfo_db = Confero::DB->new();
+                        $cfo_db->txn_do(sub {
+                            if ($do_cfo_db_contrasts_analysis) {
+                                my @contrast_datasets = $cfo_db->resultset('ContrastDataSet')->search(undef, {
                                     prefetch => [
                                         'organism',
                                         { 'contrasts' => 'gene_sets' }
@@ -1289,14 +1308,14 @@ sub analyze_data {
                                                 $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
                                             } $gene_set->gene_set_genes;
                                             my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
-                                            print $ctk_db_contrasts_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                            print $cfo_db_contrasts_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
                                         }
                                     }
                                 }
-                                close($ctk_db_contrasts_gmt_fh);
+                                close($cfo_db_contrasts_gmt_fh);
                             }
-                            if ($do_ctk_db_uploads_analysis) {
-                                my @gene_sets = $ctk_db->resultset('GeneSet')->search(undef, {
+                            if ($do_cfo_db_uploads_analysis) {
+                                my @gene_sets = $cfo_db->resultset('GeneSet')->search(undef, {
                                     prefetch => [qw( organism annotations )],
                                 })->all();
                                 GENE_SET: for my $gene_set (@gene_sets) {
@@ -1316,9 +1335,9 @@ sub analyze_data {
                                         $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
                                     } $gene_set->gene_set_genes;
                                     my $gene_set_id = construct_id($gene_set->name, $gene_set->contrast_name, $gene_set->type);
-                                    print $ctk_db_uploads_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                    print $cfo_db_uploads_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
                                 }
-                                close($ctk_db_uploads_gmt_fh);
+                                close($cfo_db_uploads_gmt_fh);
                             }
                         });
                     };
@@ -1327,8 +1346,8 @@ sub analyze_data {
                        $message .= " and ROLLBACK FAILED" if $@ =~ /rollback failed/i;
                        confess("$message, please contact $CTK_ADMIN_EMAIL_ADDRESS: $@");
                     }
-                    push(@gene_set_db_files, $ctk_db_contrasts_gmt_fh->filename) if $do_ctk_db_contrasts_analysis;
-                    push(@gene_set_db_files, $ctk_db_uploads_gmt_fh->filename) if $do_ctk_db_uploads_analysis;
+                    push(@gene_set_db_files, $cfo_db_contrasts_gmt_fh->filename) if $do_cfo_db_contrasts_analysis;
+                    push(@gene_set_db_files, $cfo_db_uploads_gmt_fh->filename) if $do_cfo_db_uploads_analysis;
                     $gene_set_db_files_csv = join(',', @gene_set_db_files);
                 }
                 else {
@@ -1416,14 +1435,22 @@ sub analyze_data {
                 -zip_report false \\
                 -out $working_dir_path \\
                 -gui false \\
-                > $working_dir_path/gsea.out 2>&1
+                >> $working_dir_path/gsea.out 2>&1
                 GSEA_CMD
+                # Tidy up spaces for printing to gsea.out
+                $gsea_preranked_cmd =~ s/^\s+//;
+                $gsea_preranked_cmd =~ s/\s+$//;
+                $gsea_preranked_cmd =~ s/ +/ /g;
                 # Our GSEA needs these files in job working directory so it doesn't try to get them by FTP
                 copy("$CTK_GSEA_MAPPING_FILE_DIR/GENE_SYMBOL.chip", "$working_dir_path/GENE_SYMBOL.chip") 
                     or confess("Could not copy $CTK_GSEA_MAPPING_FILE_DIR/GENE_SYMBOL.chip file to job working directory: $!");
-                # not needed
+                # not needed anymore
                 #copy("$CTK_GSEA_MAPPING_FILE_DIR/SEQ_ACCESSION.chip", "$working_dir_path/SEQ_ACCESSION.chip") 
                 #    or confess("Could not copy $CTK_GSEA_MAPPING_FILE_DIR/SEQ_ACCESSION.chip file to job working directory: $!");
+                # Write full GSEA command to top of gsea.out
+                open(my $gsea_trace_fh, '>', "$working_dir_path/gsea.out");
+                print $gsea_trace_fh "$gsea_preranked_cmd\n";
+                close($gsea_trace_fh);
                 # Run GSEA command and if it flops get trace output
                 if (system($gsea_preranked_cmd) != 0) {
                     my $trace;
@@ -1444,8 +1471,8 @@ sub analyze_data {
                 opendir(my $working_dh, $working_dir_path) or confess("Could not open working directory: $!");
                 my $analysis_results_dir = shift @{[grep { m/\Q$analysis_name\E\.analysis\.GseaPreranked\.\d+/i && -d } map { "$working_dir_path/$_" } readdir($working_dh)]};
                 closedir($working_dh);
-                # manipulate GSEA analysis result HTML files if we have an analysis CTK gene set DBs
-                if ($do_ctk_db_contrasts_analysis or $do_ctk_db_uploads_analysis) {
+                # manipulate GSEA analysis result HTML files if we have an analysis Confero gene set DBs
+                if ($do_cfo_db_contrasts_analysis or $do_cfo_db_uploads_analysis) {
                     opendir(my $results_dh, $analysis_results_dir) or confess("Could not open analysis results directory: $!");
                     my $html_file_na_pos_path = shift @{[ grep { m/gsea_report_for_na_pos_\d+\.html$/ && -f } map { "$analysis_results_dir/$_" } readdir($results_dh) ]};
                     seekdir($results_dh, 0) or confess("Could not reset analysis results directory for reading: $!");
@@ -1508,6 +1535,41 @@ sub analyze_data {
                 # not needed, clean up working directory (cannot be in the directory when trying to clean it)
                 #chdir "$working_dir_path/..";
                 #rmtree($working_dir_path, { keep_root => 1 });
+            }
+            # ORA Hypergeometric Test
+            elsif ($analysis_algorithm =~ /HyperGeoTest/i) {
+                # need to know source ID type to determine ORA ID universe and should be in metadata header, if not assume all Entrez Gene IDs
+                my $source_id_type = $input_file->metadata->{source_id_type} || 'EntrezGene';
+                # generate ID universe file
+                # for initial solution I open and parse the <source ID type>.map file, might be worth it in the future to uncomment creation 
+                # of <source ID type>.map.pls serialized data structure in preprocessing admin script and load that (faster)
+                # also in future probably want to check for validity of source_id_type before I get to the file open command above
+                my %unique_gene_ids;
+                open(my $src2gene_id_map_fh, '<', "$CTK_DATA_ID_MAPPING_FILE_DIR/${source_id_type}.map")
+                    or confess("Could not open $CTK_DATA_ID_MAPPING_FILE_DIR/${source_id_type}.map, make sure $source_id_type is supported: $!");
+                # read header
+                <$src2gene_id_map_fh>;
+                while (<$src2gene_id_map_fh>) {
+                    my (undef, @gene_ids) = split /\t/;
+                    for my $gene_id (@gene_ids) {
+                        $gene_id =~ s/\s+//g;
+                        confess("Entrez Gene ID $gene_id in ${source_id_type}.map file is not valid") unless is_integer($gene_id);
+                        $unique_gene_ids{$gene_id}++;
+                    }
+                }
+                close($src2gene_id_map_fh);
+                open(my $univ_gene_ids_fh, '>', "$working_dir_path/universe_gene_ids.txt")
+                    or confess("Could not create $working_dir_path/universe_gene_ids.txt: $!");
+                print $univ_gene_ids_fh join("\n", nsort keys %unique_gene_ids), "\n";
+                close($univ_gene_ids_fh);
+                $p_val_cutoff = 0.05 unless is_numeric($p_val_cutoff) and $p_val_cutoff >= 0 and $p_val_cutoff <= 1;
+                my $r_cmd_str = '';
+                if (system(split(' ', $r_cmd_str)) == 0) {
+                    
+                }
+                else {
+                    confess("There was an error executing $r_cmd_str, exit code: ", $? >> 8);
+                }
             }
             # GSEA Simple
             elsif ($analysis_algorithm =~ /GseaSimple/i) {
@@ -1762,6 +1824,49 @@ sub extract_gsea_leading_edge_matrix {
     }
 }
 
+sub extract_ora_results_matrix {
+    my $self = shift;
+    # arguments
+    # required: [input results file paths arrayref], [output file path]
+    my ($ora_results_file_paths_arrayref, $output_file_path);
+    if (@_) {
+        ($ora_results_file_paths_arrayref, $output_file_path) = @_;
+    }
+    else {
+        Getopt::Long::Configure('no_pass_through');
+        GetOptions(
+            'ora-results-file=s@' => \$ora_results_file_paths_arrayref,
+            'output-file=s'       => \$output_file_path,
+        ) || pod2usage(-verbose => 0);
+        pod2usage(-message => 'Missing required parameter --ora-results-file', -verbose => 0) 
+            unless defined $ora_results_file_paths_arrayref and @{$ora_results_file_paths_arrayref};
+        #pod2usage(-message => 'Missing required parameter --output-file', -verbose => 0) unless defined $output_file_path;
+    }
+    my @input_errors;
+    for my $ora_results_file_path (@{$ora_results_file_paths_arrayref}) {
+        push @input_errors, "$ora_results_file_path not a valid file" unless -f $ora_results_file_path;
+    }
+    if (!@input_errors) {
+        ### process input here ###
+        # generate output
+        my $output_fh;
+        if (defined $output_file_path) {
+            open($output_fh, '>', $output_file_path) or confess("Could not create $output_file_path: $!");
+        }
+        else {
+            $output_fh = *STDOUT;
+        }
+        print $output_fh "\n";
+        close($output_fh);
+    }
+    else {
+        # write output error report
+        my $error_report_str = "Input Errors:\n* " . join("\n* ", @input_errors);
+        $self->_write_report_file($output_file_path, $error_report_str, 0) if defined $output_file_path;
+        croak($error_report_str);
+    }
+}
+
 sub extract_gsea_results_matrix {
     my $self = shift;
     # arguments
@@ -1907,26 +2012,26 @@ sub extract_gene_set_matrix {
     my %gsdb_gene_set_ids = map { fix_galaxy_replaced_chars($_, 1) => 1 } @{$gsdb_gene_set_ids_arrayref} if defined $gsdb_gene_set_ids_arrayref;
     my @input_errors;
     if (!@input_errors) {
-        # if specified gene set db IDs are requested then load all msigdb, genesigdb and special c2.all.ar Confero msigdb collection
-        $gene_set_dbs_csv = 'msigdb,genesigdb,c2.all.ar' if !defined $gene_set_dbs_csv and %gsdb_gene_set_ids;
+        # if specified gene set db IDs are requested then load all msigdb, genesigdb and special msigdb.c2.ar Confero msigdb collection
+        $gene_set_dbs_csv = 'msigdb,genesigdb,msigdb.c2.ar' if !defined $gene_set_dbs_csv and %gsdb_gene_set_ids;
         # create snapshot gmt file of Confero DB gene sets
         # temp file fh vars defined here because file gets deleted when out 
         # of scope and we need it all the way through the end
-        my ($create_ctk_db_contrasts, $create_ctk_db_uploads, $ctk_db_contrasts_gmt_fh, $ctk_db_uploads_gmt_fh, @gene_set_db_file_paths);
+        my ($create_cfo_db_contrasts, $create_cfo_db_uploads, $cfo_db_contrasts_gmt_fh, $cfo_db_uploads_gmt_fh, @gene_set_db_file_paths);
         if (defined $gene_set_dbs_csv or %filter_annotations or %filter_organisms or %filter_contrast_names or %filter_gene_set_types or %filter_contrast_gene_set_ids or %filter_gene_set_ids) {
             if (defined $gene_set_dbs_csv) {
                 for my $gene_set_db (split /,/, $gene_set_dbs_csv) {
                     # Confero DB
                     if ($gene_set_db =~ /^cfodb/i) {
                         if ($gene_set_db =~ /^cfodb\.contrasts/i) {
-                            $create_ctk_db_contrasts++;
+                            $create_cfo_db_contrasts++;
                         }
                         elsif ($gene_set_db =~ /^cfodb\.uploads/i) {
-                            $create_ctk_db_uploads++;
+                            $create_cfo_db_uploads++;
                         }
                         else {
-                            $create_ctk_db_contrasts++;
-                            $create_ctk_db_uploads++;
+                            $create_cfo_db_contrasts++;
+                            $create_cfo_db_uploads++;
                         }
                     }
                     # MSigDB, GeneSigDB
@@ -1936,24 +2041,24 @@ sub extract_gene_set_matrix {
                     }
                 }
             }
-            $create_ctk_db_contrasts++ if %filter_annotations or %filter_organisms or %filter_contrast_names or %filter_gene_set_types or %filter_contrast_gene_set_ids;
-            $create_ctk_db_uploads++ if %filter_annotations or %filter_organisms or %filter_contrast_names or %filter_gene_set_types or %filter_gene_set_ids;
-            if ($create_ctk_db_contrasts or $create_ctk_db_uploads) {
-                $ctk_db_contrasts_gmt_fh = File::Temp->new(
+            $create_cfo_db_contrasts++ if %filter_annotations or %filter_organisms or %filter_contrast_names or %filter_gene_set_types or %filter_contrast_gene_set_ids;
+            $create_cfo_db_uploads++ if %filter_annotations or %filter_organisms or %filter_contrast_names or %filter_gene_set_types or %filter_gene_set_ids;
+            if ($create_cfo_db_contrasts or $create_cfo_db_uploads) {
+                $cfo_db_contrasts_gmt_fh = File::Temp->new(
                     TEMPLATE => 'cfodb.contrasts.' . 'X' x 10,
                     DIR      => $WORKING_DIR,
                     SUFFIX   => '.gmt',
-                ) if $create_ctk_db_contrasts;
-                $ctk_db_uploads_gmt_fh = File::Temp->new(
+                ) if $create_cfo_db_contrasts;
+                $cfo_db_uploads_gmt_fh = File::Temp->new(
                     TEMPLATE => 'cfodb.uploads.' . 'X' x 10,
                     DIR      => $WORKING_DIR,
                     SUFFIX   => '.gmt',
-                ) if $create_ctk_db_uploads;
+                ) if $create_cfo_db_uploads;
                 eval {
-                    my $ctk_db = Confero::DB->new();
-                    $ctk_db->txn_do(sub {
-                        if ($create_ctk_db_contrasts) {
-                            my @contrast_datasets = $ctk_db->resultset('ContrastDataSet')->search(undef, {
+                    my $cfo_db = Confero::DB->new();
+                    $cfo_db->txn_do(sub {
+                        if ($create_cfo_db_contrasts) {
+                            my @contrast_datasets = $cfo_db->resultset('ContrastDataSet')->search(undef, {
                                 prefetch => [
                                     'organism',
                                     { 'contrasts' => 'gene_sets' }
@@ -1973,14 +2078,14 @@ sub extract_gene_set_matrix {
                                         my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
                                         next CONTRAST_GENE_SET if %filter_contrast_gene_set_ids and !exists $filter_contrast_gene_set_ids{$gene_set_id};
                                         my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                        print $ctk_db_contrasts_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                        print $cfo_db_contrasts_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/contrast_gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
                                     }
                                 }
                             }
-                            close($ctk_db_contrasts_gmt_fh);
+                            close($cfo_db_contrasts_gmt_fh);
                         }
-                        if ($create_ctk_db_uploads) {
-                            my @gene_sets = $ctk_db->resultset('GeneSet')->search(undef, {
+                        if ($create_cfo_db_uploads) {
+                            my @gene_sets = $cfo_db->resultset('GeneSet')->search(undef, {
                                 prefetch => [qw( organism annotations )],
                             })->all();
                             GENE_SET: for my $gene_set (@gene_sets) {
@@ -1995,9 +2100,9 @@ sub extract_gene_set_matrix {
                                         $gene_set_annotations{$annotation_name} ne $filter_annotations{$annotation_name});
                                 }
                                 my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                print $ctk_db_uploads_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                print $cfo_db_uploads_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST/view/gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
                             }
-                            close($ctk_db_uploads_gmt_fh);
+                            close($cfo_db_uploads_gmt_fh);
                         }
                     });
                 };
@@ -2006,8 +2111,8 @@ sub extract_gene_set_matrix {
                    $message .= " and ROLLBACK FAILED" if $@ =~ /rollback failed/i;
                    confess("$message, please contact $CTK_ADMIN_EMAIL_ADDRESS: $@");
                 }
-                push(@gene_set_db_file_paths, $ctk_db_contrasts_gmt_fh->filename) if $create_ctk_db_contrasts;
-                push(@gene_set_db_file_paths, $ctk_db_uploads_gmt_fh->filename) if $create_ctk_db_uploads;
+                push(@gene_set_db_file_paths, $cfo_db_contrasts_gmt_fh->filename) if $create_cfo_db_contrasts;
+                push(@gene_set_db_file_paths, $cfo_db_uploads_gmt_fh->filename) if $create_cfo_db_uploads;
             }
         }
         # parse gene set DBs and build data structure
@@ -2050,16 +2155,16 @@ sub extract_gene_set_matrix {
                 $output_fh = *STDOUT;
             }
             # include data matrix start column for R, 4 if including 1 ID + 2 annots columns, 2 if only 1 ID column
-            print $output_fh "#\%matrix_start_column=", ($create_ctk_db_contrasts or $create_ctk_db_uploads) ? '4' : '2', "\n";
+            print $output_fh "#\%matrix_start_column=", ($create_cfo_db_contrasts or $create_cfo_db_uploads) ? '4' : '2', "\n";
             my ($gene_info_hashref, $add_gene_info_hashref, $uc_symbol2gene_ids_map);
-            if ($create_ctk_db_contrasts or $create_ctk_db_uploads) {
+            if ($create_cfo_db_contrasts or $create_cfo_db_uploads) {
                 $gene_info_hashref = Confero::EntrezGene->instance()->gene_info;
                 $add_gene_info_hashref = Confero::EntrezGene->instance()->add_gene_info;
                 $uc_symbol2gene_ids_map = Confero::EntrezGene->instance()->uc_symbol2gene_ids;
             }
             my @sorted_gene_set_names = natsort keys %gene_set_names;
             print $output_fh 
-                ($create_ctk_db_contrasts or $create_ctk_db_uploads) 
+                ($create_cfo_db_contrasts or $create_cfo_db_uploads) 
                     ? "Gene ID\tGene Symbol\tDescription\t" 
                     : "Gene Symbol\t",
                 join("\t", @sorted_gene_set_names), "\n"; 
@@ -2067,7 +2172,7 @@ sub extract_gene_set_matrix {
                 # for performance, otherwise so many prints is way too slow
                 my @line_parts;
                 push @line_parts, $gene_id;
-                if ($create_ctk_db_contrasts or $create_ctk_db_uploads) {
+                if ($create_cfo_db_contrasts or $create_cfo_db_uploads) {
                     push @line_parts, 
                         $gene_info_hashref->{$gene_id}->{symbol}, 
                         $add_gene_info_hashref->{$gene_id}->{description} || '' 
@@ -2260,9 +2365,9 @@ sub extract_contrast_data_subset {
     if (defined $contrast_dataset_id) {
         my ($dataset_name) = deconstruct_id($contrast_dataset_id);
         eval {
-            my $ctk_db = Confero::DB->new();
-            $ctk_db->txn_do(sub {
-                if (my $dataset = $ctk_db->resultset('ContrastDataSet')->find({
+            my $cfo_db = Confero::DB->new();
+            $cfo_db->txn_do(sub {
+                if (my $dataset = $cfo_db->resultset('ContrastDataSet')->find({
                     name => $dataset_name,
                 })) {
                     # set input file path to scalar reference of in-memory data and open() will do the right thing

@@ -19,7 +19,7 @@ $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Terse = 1;
 $Data::Dumper::Deepcopy = 1;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 const my $FLOAT_REGEXP => qr/[+-]?\ *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/o;
 const my @DATA_COL_HEADERS => qw(M A P S F Df);

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base 'DBIx::Class::Core';
 
-our $VERSION = '0.8';
+our $VERSION = '0.1';
 
 __PACKAGE__->table('contrast_data_set_source_data_file');
 __PACKAGE__->add_columns(

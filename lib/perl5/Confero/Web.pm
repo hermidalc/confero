@@ -13,8 +13,9 @@ use Sort::Key qw(nsort nkeysort);
 use Sort::Key::Natural qw(natkeysort rnatkeysort);
 use Sort::Key::Multi qw(s2keysort);
 use Dancer ':syntax';
+#use Dancer::Plugin::DirectoryView;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 #get '/' => sub {
 #    template 'index';

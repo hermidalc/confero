@@ -18,7 +18,7 @@ $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Terse = 1;
 $Data::Dumper::Deepcopy = 1;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 # do all this at class load to get plugins loaded into namespace; only need this instantiated once anyway
 my $mp = Module::Pluggable::Object->new(
@@ -71,6 +71,8 @@ sub new {
     if (!@{$self->data_errors}) {
         # set organism tax ID for non-Gene ID-based source data
         if (!defined $self->organism_tax_id) {
+            # cannot use this one-liner because first valid ID might not have a mapping gene ID
+            #my $valid_gene_id = $self->_valid_ids->{(keys %{$self->_valid_ids})[0]}->{gene_id};
             my $valid_gene_id;
             for my $source_id_hashref (values %{$self->_valid_ids}) {
                 if (defined $source_id_hashref->{gene_id}) {
@@ -78,7 +80,6 @@ sub new {
                     last;
                 }
             }
-            #my $valid_gene_id = $self->_valid_ids->{(keys %{$self->_valid_ids})[0]}->{gene_id};
             confess('Could not obtain a valid gene ID from source IDs (this should not happen)') unless defined $valid_gene_id;
             my $gene_info_hashref = Confero::EntrezGene->instance()->gene_info;
             my $gene_history_hashref = Confero::EntrezGene->instance()->gene_history;

@@ -6,7 +6,7 @@ use base 'Class::Singleton';
 use Confero::Config qw(:entrez);
 use Storable qw(lock_retrieve);
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 #sub _new_instance {
 #    my $class = shift;

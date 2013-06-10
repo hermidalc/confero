@@ -13,7 +13,7 @@ use Sort::Key qw(nsort nkeysort);
 use Sort::Key::Natural qw(natsort);
 use Utils qw(is_integer is_numeric);
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 sub data_type_common_name {
     return 'Ranked List';

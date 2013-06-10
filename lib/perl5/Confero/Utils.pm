@@ -16,7 +16,7 @@ our @EXPORT_OK = qw(
     is_valid_id
     fix_galaxy_replaced_chars
 );
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 const my $CTK_DISPLAY_ID_GENE_SET_SUFFIX_PATTERN => join('|', map(quotemeta, @CTK_DATA_CONTRAST_GENE_SET_TYPE_SUFFIXES));
 const my $CTK_DISPLAY_ID_REGEXP => 

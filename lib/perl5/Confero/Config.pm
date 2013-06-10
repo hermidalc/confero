@@ -5,17 +5,13 @@ use warnings;
 use Const::Fast;
 use Confero::LocalConfig qw(
     $CTK_BASE_DIR
-    $CTK_DB_SERVER_VERSION
     $CTK_AFFY_ANNOT_NETAFFX_VERSION
-    $GSEA_MSIGDB_VERSION
 );
 require Exporter;
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-    $CTK_DB_MYSQL_MAX_ALLOWED_PACKET
-    $CTK_DB_SQLT_ARGS
-    $CTK_GALAXY_ANNOT_NV_SEPARATOR
+    $CTK_DATA_DIR
     $CTK_DATA_ID_MAPPING_FILE_DIR
     $CTK_DATA_ID_MAPPING_GENE_SYMBOL_SUFFIX
     %CTK_DATA_FILE_METADATA_FIELDS
@@ -37,7 +33,6 @@ our @EXPORT_OK = qw(
     $CTK_GSEA_GENE_SET_DB_DIR
     $CTK_GSEA_MAPPING_FILE_DIR
     $CTK_GSEA_REPORTS_CACHE_DIR
-    $CTK_GSEA_MSIGDB_VERSION
     $CTK_GSEA_GENESIGDB_VERSION
     $CTK_GSEA_GENESIGDB_FILE_URI
     $CTK_GSEA_GSDB_ID_TYPE
@@ -46,18 +41,13 @@ our @EXPORT_OK = qw(
     $CTK_GSEA_DETAILS_FILE_NAME_REGEXP
     %CTK_GSEA_RESULTS_COLUMN_NAMES
     $CTK_WEB_EXTRACT_ROWS_PER_PAGE
+    $CTK_GALAXY_ANNOT_NV_SEPARATOR
 );
     #$CTK_DATA_FILE_REPOSITORY_DIR
 our %EXPORT_TAGS = ( 
     all => \@EXPORT_OK,
-    database => [qw(
-        $CTK_DB_MYSQL_MAX_ALLOWED_PACKET
-        $CTK_DB_SQLT_ARGS
-    )],
-    galaxy => [qw(
-        $CTK_GALAXY_ANNOT_NV_SEPARATOR
-    )],
     data => [qw(
+        $CTK_DATA_DIR
         $CTK_DATA_ID_MAPPING_FILE_DIR
         $CTK_DATA_ID_MAPPING_GENE_SYMBOL_SUFFIX
         %CTK_DATA_FILE_METADATA_FIELDS 
@@ -92,7 +82,6 @@ our %EXPORT_TAGS = (
         $CTK_GSEA_GENE_SET_DB_DIR
         $CTK_GSEA_MAPPING_FILE_DIR
         $CTK_GSEA_REPORTS_CACHE_DIR
-        $CTK_GSEA_MSIGDB_VERSION
         $CTK_GSEA_GENESIGDB_VERSION
         $CTK_GSEA_GENESIGDB_FILE_URI
         $CTK_GSEA_GSDB_ID_TYPE
@@ -104,17 +93,15 @@ our %EXPORT_TAGS = (
     web => [qw(
         $CTK_WEB_EXTRACT_ROWS_PER_PAGE
     )],
+    galaxy => [qw(
+        $CTK_GALAXY_ANNOT_NV_SEPARATOR
+    )],
 );
-our $VERSION = '0.8';
+our $VERSION = '0.1';
 
-# Database
-# max_allowed_packet variable size in bytes (default set to MySQL max of 1 GB)
-const our $CTK_DB_MYSQL_MAX_ALLOWED_PACKET           => 1073741824;
-const our $CTK_DB_SQLT_ARGS                          => { show_warnings => 1, producer_args => { mysql_version => $CTK_DB_SERVER_VERSION } };
-# Galaxy
-const our $CTK_GALAXY_ANNOT_NV_SEPARATOR             => '<->';
 # Data
-const our $CTK_DATA_ID_MAPPING_FILE_DIR              => "$CTK_BASE_DIR/data/mappings";
+const our $CTK_DATA_DIR                              => "$CTK_BASE_DIR/data";
+const our $CTK_DATA_ID_MAPPING_FILE_DIR              => "$CTK_DATA_DIR/mappings";
 const our $CTK_DATA_ID_MAPPING_GENE_SYMBOL_SUFFIX    => '_gene_symbols';
 # we don't store data files in file system anymore
 #const our $CTK_DATA_FILE_REPOSITORY_DIR              => "$CTK_BASE_DIR/tmp";
@@ -166,6 +153,8 @@ const our %CTK_DATA_FILE_METADATA_FIELDS             => (
     },
     id_type => {
     },
+    source_id_type => {
+    },
     dataset_name => {
     },
     dataset_desc => {
@@ -199,7 +188,7 @@ const our @CTK_DATA_CONTRAST_GENE_SET_TYPE_SUFFIXES  => qw( UP UPr DN DNr AR ARr
 # local, not exported
 const my  $AFFY_ANNOT_DATA_BASE_URI                  => 'http://media.affymetrix.com/analysis/downloads';
 const my  $AFFY_ANNOT_FILE_BASE_URI                  => "$AFFY_ANNOT_DATA_BASE_URI/$CTK_AFFY_ANNOT_NETAFFX_VERSION";
-const our $CTK_AFFY_ANNOT_DATA_DIR                   => "$CTK_BASE_DIR/data/affymetrix";
+const our $CTK_AFFY_ANNOT_DATA_DIR                   => "$CTK_DATA_DIR/affymetrix";
 const our %CTK_AFFY_ARRAY_DATA                       => (
     #'ATH1-121501' => {
     #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/ATH1-121501.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
@@ -213,32 +202,32 @@ const our %CTK_AFFY_ARRAY_DATA                       => (
     #'Drosophila_2' => {
     #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Drosophila_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     #},
-    'HG-Focus' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-Focus.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'HG_U95A' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG_U95A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
+    #'HG-Focus' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-Focus.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'HG_U95A' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG_U95A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
     'HG_U95Av2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG_U95Av2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
-    'HG-U133A' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'HG-U133B' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
+    #'HG-U133A' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'HG-U133B' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
     'HG-U133A_2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133A_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
     'HG-U133_Plus_2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HG-U133_Plus_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
-    #'HuEx-1_0-st-v2' => {
-    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/HuEx-1_0-st-v2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.hg19.transcript.csv.zip",
-    #},
+    'HuEx-1_0-st-v2' => {
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/HuEx-1_0-st-v2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.1.hg19.transcript.csv.zip",
+    },
     'HuGene-1_0-st-v1' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene/HuGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.hg19.transcript.csv.zip",
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene-32_2/HuGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.2.hg19.transcript.csv.zip",
     },
     'HT_HG-U133_Plus_PM' => {
         annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HT_HG-U133_Plus_PM.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
@@ -249,50 +238,50 @@ const our %CTK_AFFY_ARRAY_DATA                       => (
     'HT_Rat230_PM' => {
         annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/HT_Rat230_PM.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
-    'MG_U74Av2' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Av2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'MG_U74Bv2' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Bv2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'MG_U74Cv2' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Cv2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'MOE430A' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MOE430A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'MOE430B' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MOE430B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
+    #'MG_U74Av2' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Av2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'MG_U74Bv2' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Bv2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'MG_U74Cv2' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MG_U74Cv2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'MOE430A' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MOE430A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'MOE430B' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/MOE430B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
     'Mouse430A_2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Mouse430A_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
     'Mouse430_2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Mouse430_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
-    #'MoEx-1_0-st-v1' => {
-    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/MoEx-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.mm9.transcript.csv.zip",
-    #},
+    'MoEx-1_0-st-v1' => {
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/MoEx-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.1.mm9.transcript.csv.zip",
+    },
     'MoGene-1_0-st-v1' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene/MoGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.mm9.transcript.csv.zip",
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene-32_2/MoGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.2.mm9.transcript.csv.zip",
     },
     #'Plasmodium_Anopheles' => {
     #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Plasmodium_Anopheles.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     #},
-    'RAE230A' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/RAE230A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
-    'RAE230B' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/RAE230B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
-    },
+    #'RAE230A' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/RAE230A.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
+    #'RAE230B' => {
+    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/RAE230B.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
+    #},
     'Rat230_2' => {
        annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Rat230_2.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
     },
-    #'RaEx-1_0-st-v1' => {
-    #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/RaEx-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.rn4.transcript.csv.zip",
-    #},
+    'RaEx-1_0-st-v1' => {
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtexon/RaEx-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.1.rn4.transcript.csv.zip",
+    },
     'RaGene-1_0-st-v1' => {
-       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene/RaGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.rn4.transcript.csv.zip",
+       annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/wtgene-32_2/RaGene-1_0-st-v1.$CTK_AFFY_ANNOT_NETAFFX_VERSION.2.rn4.transcript.csv.zip",
     },
     #'Rhesus' => {
     #   annot_file_uri => "$AFFY_ANNOT_FILE_BASE_URI/ivt/Rhesus.$CTK_AFFY_ANNOT_NETAFFX_VERSION.annot.csv.zip",
@@ -308,7 +297,7 @@ const our %CTK_AFFY_ARRAY_DATA                       => (
     #},
 );
 # Agilent
-const our $CTK_AGILENT_ANNOT_DATA_DIR                => "$CTK_BASE_DIR/data/agilent";
+const our $CTK_AGILENT_ANNOT_DATA_DIR                => "$CTK_DATA_DIR/agilent";
 const our %CTK_AGILENT_ARRAY_DATA                    => (
     #'Whole_Human_Genome_Microarray_4x44K_v2' => {
     #   design_id => '026652',
@@ -322,7 +311,7 @@ const our %CTK_AGILENT_ARRAY_DATA                    => (
 );
 # GEO
 const my  $GEO_ANNOT_DATA_BASE_URI                   => 'http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=platform&form=text&view=data&acc=';
-const our $CTK_GEO_ANNOT_DATA_DIR                    => "$CTK_BASE_DIR/data/geo";
+const our $CTK_GEO_ANNOT_DATA_DIR                    => "$CTK_DATA_DIR/geo";
 const our %CTK_GEO_ARRAY_DATA                        => (
     'GPL334' => {
         annot_file_uri => "${GEO_ANNOT_DATA_BASE_URI}GPL334",
@@ -386,7 +375,7 @@ const our %CTK_GEO_ARRAY_DATA                        => (
     },
 );
 # Illumina
-const our $CTK_ILLUMINA_ANNOT_DATA_DIR               => "$CTK_BASE_DIR/data/illumina";
+const our $CTK_ILLUMINA_ANNOT_DATA_DIR               => "$CTK_DATA_DIR/illumina";
 const our %CTK_ILLUMINA_ARRAY_DATA                   => (
     #'MouseRef-8_v2_0' => {
     #    name => 'MouseRef-8 v2.0 Expression BeadChip',
@@ -396,7 +385,7 @@ const our %CTK_ILLUMINA_ARRAY_DATA                   => (
 # local, not exported
 const my  $NCBI_FTP_BASE_URI                         => 'ftp://ftp.ncbi.nih.gov';
 const my  $ENTREZ_GENE_DATA_BASE_URI                 => "$NCBI_FTP_BASE_URI/gene/DATA";
-const our $CTK_ENTREZ_GENE_DATA_DIR                  => "$CTK_BASE_DIR/data/entrez_gene";
+const our $CTK_ENTREZ_GENE_DATA_DIR                  => "$CTK_DATA_DIR/entrez_gene";
 const our %CTK_ENTREZ_GENE_DATA                      => (
     'gene_info' => {
         file_uri => "$ENTREZ_GENE_DATA_BASE_URI/gene_info.gz",
@@ -419,22 +408,22 @@ const our %CTK_ENTREZ_GENE_DATA                      => (
     },
 );
 const our %CTK_ENTREZ_GENE_ORGANISM_DATA             => (
-    #'Anopheles gambiae' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Anopheles_gambiae.gene_info.gz",
-    #    tax_id => '7165',
-    #},
-    #'Arabidopsis thaliana' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Plants/Arabidopsis_thaliana.gene_info.gz",
-    #    tax_id => '3702',
-    #},
-    #'Caenorhabditis elegans' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Caenorhabditis_elegans.gene_info.gz",
-    #    tax_id => '6239',
-    #},
-    #'Drosophila melanogaster' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Drosophila_melanogaster.gene_info.gz",
-    #    tax_id => '7227',
-    #},
+    'Anopheles gambiae' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Anopheles_gambiae.gene_info.gz",
+        tax_id => '7165',
+    },
+    'Arabidopsis thaliana' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Plants/Arabidopsis_thaliana.gene_info.gz",
+        tax_id => '3702',
+    },
+    'Caenorhabditis elegans' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Caenorhabditis_elegans.gene_info.gz",
+        tax_id => '6239',
+    },
+    'Drosophila melanogaster' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Invertebrates/Drosophila_melanogaster.gene_info.gz",
+        tax_id => '7227',
+    },
     'Homo sapiens' => {
         gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz",
         tax_id => '9606',
@@ -443,22 +432,22 @@ const our %CTK_ENTREZ_GENE_ORGANISM_DATA             => (
         gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Mammalia/Mus_musculus.gene_info.gz",
         tax_id => '10090',
     },
-    #'Oryza sativa' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Plants/Oryza_sativa.gene_info.gz",
-    #    tax_id => '4530',
-    #},
+    'Oryza sativa' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Plants/Oryza_sativa.gene_info.gz",
+        tax_id => '4530',
+    },
     'Rattus norvegicus' => {
         gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Mammalia/Rattus_norvegicus.gene_info.gz",
         tax_id => '10116',
     },
-    #'Saccharomyces cerevisiae' => {
-    #    gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Fungi/Saccharomyces_cerevisiae.gene_info.gz",
-    #    tax_id => '4932',
-    #},
-    #'Schizosaccharomyces pombe' => {
-    #    parse_gene_info => 1,
-    #    parse_tax_ids => [qw( 4896 284812 )],
-    #},
+    'Saccharomyces cerevisiae' => {
+        gene_info_file_uri => "$ENTREZ_GENE_DATA_BASE_URI/GENE_INFO/Fungi/Saccharomyces_cerevisiae.gene_info.gz",
+        tax_id => '4932',
+    },
+    'Schizosaccharomyces pombe' => {
+        tax_id => '284812',
+        gene_info_tax_ids => [qw( 4896 284812 )],
+    },
 );
 const our %CTK_ENTREZ_GENE_REFSEQ_STATUS_DATA => (
     REVIEWED    => { rank => 1 },
@@ -475,33 +464,35 @@ const our $CTK_GSEA_JAR_PATH                         => "$CTK_GSEA_HOME/gsea.jar
 const our $CTK_GSEA_GENE_SET_DB_DIR                  => "$CTK_GSEA_HOME/data/databases";
 const our $CTK_GSEA_MAPPING_FILE_DIR                 => "$CTK_GSEA_HOME/data/mappings";
 const our $CTK_GSEA_REPORTS_CACHE_DIR                => "$ENV{HOME}/gsea_home/reports_cache_foo";
-const our $CTK_GSEA_MSIGDB_VERSION                   => "$GSEA_MSIGDB_VERSION";
 const our $CTK_GSEA_GENESIGDB_VERSION                => '4.0';
 const our $CTK_GSEA_GENESIGDB_FILE_URI               => 'http://compbio.dfci.harvard.edu/genesigdb/download/ALL_SIGSv4.gmt';
+# local, not exported
+const my $CTK_GSEA_MSIGDB_VERSION                    => '3.1';
 # 'entrez' or 'symbols'
 const our $CTK_GSEA_GSDB_ID_TYPE                     => 'symbols';
 const our %CTK_GSEA_GSDBS                            => (
-    'msigdb'         => "msigdb.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c1.all'         => "c1.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.all'         => "c2.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.all.ar'      => "c2.all.ar.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cgp'         => "c2.cgp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cgp.ar'      => "c2.cgp.ar.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cp'          => "c2.cp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cp.biocarta' => "c2.cp.biocarta.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cp.kegg'     => "c2.cp.kegg.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c2.cp.reactome' => "c2.cp.reactome.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c3.all'         => "c3.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c3.mir'         => "c3.mir.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c3.tft'         => "c3.tft.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c4.all'         => "c4.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c4.cgn'         => "c4.cgn.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c4.cm'          => "c4.cm.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c5.all'         => "c5.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c5.bp'          => "c5.bp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c5.cc'          => "c5.cc.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'c5.mf'          => "c5.mf.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
-    'genesigdb'      => "genesigdb.v$CTK_GSEA_GENESIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb'                => "msigdb.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c1'             => "c1.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2'             => "c2.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.ar'          => "c2.all.ar.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cgp'         => "c2.cgp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cgp.ar'      => "c2.cgp.ar.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cp'          => "c2.cp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cp.biocarta' => "c2.cp.biocarta.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cp.kegg'     => "c2.cp.kegg.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c2.cp.reactome' => "c2.cp.reactome.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c3'             => "c3.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c3.mir'         => "c3.mir.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c3.tft'         => "c3.tft.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c4'             => "c4.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c4.cgn'         => "c4.cgn.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c4.cm'          => "c4.cm.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c5'             => "c5.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c5.bp'          => "c5.bp.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c5.cc'          => "c5.cc.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c5.mf'          => "c5.mf.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c6'             => "c6.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'genesigdb'             => "genesigdb.v$CTK_GSEA_GENESIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
 );
 const our $CTK_GSEA_REPORT_FILE_NAME_REGEXP          => qr/^gsea_report_for_na_(pos|neg)_\d+\.xls$/o;
 const our $CTK_GSEA_DETAILS_FILE_NAME_REGEXP         => qr/^[A-Z0-9].*?\.xls$/o;
@@ -517,5 +508,7 @@ const our %CTK_GSEA_RESULTS_COLUMN_NAMES             => map { uc($_) => 1 } (
 );
 # Confero Web
 const our $CTK_WEB_EXTRACT_ROWS_PER_PAGE             => 2000;
+# Galaxy
+const our $CTK_GALAXY_ANNOT_NV_SEPARATOR             => '<->';
 
 1;
