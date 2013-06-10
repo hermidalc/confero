@@ -17,7 +17,7 @@ sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
 }
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 # Unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
@@ -25,7 +25,7 @@ select(STDOUT); $| = 1;
 
 const my $PUBMED_BASEURL => 'http://www.pubmed.org/';
 
-print "#", '-' x 100, "#\n",
+print "#", '-' x 120, "#\n",
       "# Confero GeneSigDB GMT Downloader/Processor [" . scalar localtime() . "]\n\n";
 my $tmp_dir = File::Temp->newdir('X' x 10, DIR => $CTK_TEMP_DIR);
 my $ff = File::Fetch->new(uri => $CTK_GSEA_GENESIGDB_FILE_URI) or die "\n\nERROR: File::Fetch object constructor error\n\n";
