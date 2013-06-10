@@ -2,121 +2,131 @@
 # CONFERO INSTALLATION
 ##############################################################
 # Requirements:
-- Perl >= 5.12
-- MySQL >= 5.1.45
-- Java >= 1.6 (only required if you want to use GSEA)
+Perl => 5.12, 5.14, or 5.16
+MySQL Server => 5.0, 5.1, or 5.5
+Java JRE => 1.6 or 1.7
 
+# Download the Confero project code from SourceForge:
 
-# Confero source code is hosted on SourceForge
-# Get Confero project:
-git clone https://git.code.sf.net/p/confero/code confero_platform
+$ git clone https://git.code.sf.net/p/confero/code confero_platform
 
 # Copy and set up your local configuration file: 
-# In the folder: lib/perl5/Confero 
-cp LocalConfig.pm.sample LocalConfig.pm
+# In the folder: confero_platform/lib/perl5/Confero:
+
+$ cp LocalConfig.pm.sample LocalConfig.pm
 
 # Customize LocalConfig.pm for your local installation, typically you would set:
-$CTK_BASE_DIR 			# Folder where you checked out/cloned confero, i.e. /your_install_path/confero_platform
-$CTK_ADMIN_EMAIL_ADDRESS	# email address of the administrator
-$CTK_DB_SERVER_VERSION 		# MySQL database server version
-$CTK_DB_HOST 			# MySQL server host name
-$CTK_DB_NAME 			# MySQL database name 
-$CTK_DB_USER			# MySQL user name
-$CTK_DB_PASS			# MySQL user password
-$CTK_WEB_SERVER_HOST		# Apache server url
+
+$CTK_BASE_DIR               # Path to confero_platform root directory
+$CTK_ADMIN_EMAIL_ADDRESS	# Email address of the administrator
+$CTK_DB_HOST                # MySQL server host name
+$CTK_DB_NAME                # MySQL database name 
+$CTK_DB_USER                # MySQL user name
+$CTK_DB_PASS                # MySQL user password
+$CTK_WEB_SERVER_HOST		# Apache server hostname
 $CTK_WEB_SERVER_PORT		# Apache server port
 
-##############################################################
-# Dependencies installation
-##############################################################
-# From confero_platform root directory
-# Run the dependency installer: 
-./scripts/cfo_install_deps.sh
 
 ##############################################################
-# GSEA installation
+# Dependencies Installation
 ##############################################################
-# OPTIONAL:
-# Download GSEA JAR (Java ARchive) file from http://www.broadinstitute.org/gsea/downloads.jsp
-# This file is subject to third party license, see DISCLAIMER file.
-# Copy the gsea2-x.y.jar into the /path_to_confero/opt/gsea folder
+# From confero_platform root directory run the dependency installer:
+
+$ ./scripts/cfo_install_deps.sh
+
+
+##############################################################
+# GSEA and MSigDB Installation
+##############################################################
+# Download the GSEA JAR file from http://www.broadinstitute.org/gsea/downloads.jsp
+
+# Copy the gsea2-x.y.jar into the confero_platform/opt/gsea folder
+
+# Create a symbolic link to gsea2-x.y.jar called gsea.jar:
+
+$ cd opt/gsea
+$ ln -s gsea2-x.y.jar gsea.jar
 
 # Download MSigDB datasets from http://www.broadinstitute.org/gsea/downloads.jsp
-# These files are subject to third party license, see DISCLAIMER file.
-# into the /path_to_confero/opt/gsea/data/databases folder
+# into the confero_platform/opt/gsea/data/databases folder.
 # All gene sets: "msigdb.vx.y.entrez.gmt", "msigdb.vx.y.symbols.gmt"
-# and c1-c5: "c[1-5].*.vx.y.entrez.gmt", "c[1-5].*.vx.y.symbols.gmt"
-
-# Create a symbolic link to your version of gsea.jar
-cd /path_to_confero/opt/gsea
-ln -s gsea2-x.y.jar gsea.jar
+# and c1-c6: "c[1-6].*.vx.y.entrez.gmt", "c[1-6].*.vx.y.symbols.gmt"
 
 # You should end up with the following structure
-# This is an example with GSEA database v3.1 and gsea2-2.08.jar
+# This is an example with MSigDB v3.1 and gsea2-2.0.12.jar:
 
-opt/
+opt
 └── gsea
     ├── data
-    │   ├── databases
-    │   │   ├── c1.all.v3.1.entrez.gmt
-    │   │   ├── c1.all.v3.1.symbols.gmt
-    │   │   ├── c2.all.v3.1.entrez.gmt
-    │   │   ├── c2.all.v3.1.symbols.gmt
-    │   │   ├── c2.cgp.v3.1.entrez.gmt
-    │   │   ├── c2.cgp.v3.1.symbols.gmt
-    │   │   ├── c2.cp.biocarta.v3.1.entrez.gmt
-    │   │   ├── c2.cp.biocarta.v3.1.symbols.gmt
-    │   │   ├── c2.cp.kegg.v3.1.entrez.gmt
-    │   │   ├── c2.cp.kegg.v3.1.symbols.gmt
-    │   │   ├── c2.cp.reactome.v3.1.entrez.gmt
-    │   │   ├── c2.cp.reactome.v3.1.symbols.gmt
-    │   │   ├── c2.cp.v3.1.entrez.gmt
-    │   │   ├── c2.cp.v3.1.symbols.gmt
-    │   │   ├── c3.all.v3.1.entrez.gmt
-    │   │   ├── c3.all.v3.1.symbols.gmt
-    │   │   ├── c3.mir.v3.1.entrez.gmt
-    │   │   ├── c3.mir.v3.1.symbols.gmt
-    │   │   ├── c3.tft.v3.1.entrez.gmt
-    │   │   ├── c3.tft.v3.1.symbols.gmt
-    │   │   ├── c4.all.v3.1.entrez.gmt
-    │   │   ├── c4.all.v3.1.symbols.gmt
-    │   │   ├── c4.cgn.v3.1.entrez.gmt
-    │   │   ├── c4.cgn.v3.1.symbols.gmt
-    │   │   ├── c4.cm.v3.1.entrez.gmt
-    │   │   ├── c4.cm.v3.1.symbols.gmt
-    │   │   ├── c5.all.v3.1.entrez.gmt
-    │   │   ├── c5.all.v3.1.symbols.gmt
-    │   │   ├── c5.bp.v3.1.entrez.gmt
-    │   │   ├── c5.bp.v3.1.symbols.gmt
-    │   │   ├── c5.cc.v3.1.entrez.gmt
-    │   │   ├── c5.cc.v3.1.symbols.gmt
-    │   │   ├── c5.mf.v3.1.entrez.gmt
-    │   │   ├── c5.mf.v3.1.symbols.gmt
-    │   │   ├── msigdb.v3.1.entrez.gmt
-    │   │   └── msigdb.v3.1.symbols.gmt
-    │   └── mappings
-    ├── gsea2-2.08.jar
-    └── gsea.jar -> gsea2-2.08.jar
+    │   ├── databases
+    │   │   ├── c1.all.v3.1.entrez.gmt
+    │   │   ├── c1.all.v3.1.symbols.gmt
+    │   │   ├── c2.all.ar.v3.1.entrez.gmt
+    │   │   ├── c2.all.ar.v3.1.symbols.gmt
+    │   │   ├── c2.all.v3.1.entrez.gmt
+    │   │   ├── c2.all.v3.1.symbols.gmt
+    │   │   ├── c2.cgp.ar.v3.1.entrez.gmt
+    │   │   ├── c2.cgp.ar.v3.1.symbols.gmt
+    │   │   ├── c2.cgp.v3.1.entrez.gmt
+    │   │   ├── c2.cgp.v3.1.symbols.gmt
+    │   │   ├── c2.cp.biocarta.v3.1.entrez.gmt
+    │   │   ├── c2.cp.biocarta.v3.1.symbols.gmt
+    │   │   ├── c2.cp.kegg.v3.1.entrez.gmt
+    │   │   ├── c2.cp.kegg.v3.1.symbols.gmt
+    │   │   ├── c2.cp.reactome.v3.1.entrez.gmt
+    │   │   ├── c2.cp.reactome.v3.1.symbols.gmt
+    │   │   ├── c2.cp.v3.1.entrez.gmt
+    │   │   ├── c2.cp.v3.1.symbols.gmt
+    │   │   ├── c3.all.v3.1.entrez.gmt
+    │   │   ├── c3.all.v3.1.symbols.gmt
+    │   │   ├── c3.mir.v3.1.entrez.gmt
+    │   │   ├── c3.mir.v3.1.symbols.gmt
+    │   │   ├── c3.tft.v3.1.entrez.gmt
+    │   │   ├── c3.tft.v3.1.symbols.gmt
+    │   │   ├── c4.all.v3.1.entrez.gmt
+    │   │   ├── c4.all.v3.1.symbols.gmt
+    │   │   ├── c4.cgn.v3.1.entrez.gmt
+    │   │   ├── c4.cgn.v3.1.symbols.gmt
+    │   │   ├── c4.cm.v3.1.entrez.gmt
+    │   │   ├── c4.cm.v3.1.symbols.gmt
+    │   │   ├── c5.all.v3.1.entrez.gmt
+    │   │   ├── c5.all.v3.1.symbols.gmt
+    │   │   ├── c5.bp.v3.1.entrez.gmt
+    │   │   ├── c5.bp.v3.1.symbols.gmt
+    │   │   ├── c5.cc.v3.1.entrez.gmt
+    │   │   ├── c5.cc.v3.1.symbols.gmt
+    │   │   ├── c5.mf.v3.1.entrez.gmt
+    │   │   ├── c5.mf.v3.1.symbols.gmt
+    │   │   ├── c6.all.v3.1.entrez.gmt
+    │   │   ├── c6.all.v3.1.symbols.gmt
+    │   │   ├── msigdb.v3.1.entrez.gmt
+    │   │   └── msigdb.v3.1.symbols.gmt
+    │   └── mappings
+    ├── gsea2-2.0.12.jar
+    └── gsea.jar -> gsea2-2.0.12.jar
 
 
 ##############################################################
-# Setup script
+# System Setup
 ##############################################################
 
-# Run the setup program and follow the interactive instructions: 
-./scripts/cfo_setup.pl
-# This script may need a long time to be exectued due to a large amount of
-# public data that is downloaded
+# Run the system setup program and follow the interactive instructions:
+
+$ ./scripts/cfo_setup.pl
+
+# The setup script can take some time to complete due to large amount of public data 
+# that is downloaded, parsed, and processed.
 
 
 ##############################################################
-# GALAXY configuration for Confero (OPTIONAL)
+# Galaxy Configuration (Optional)
 ##############################################################
+# Make a symbolic link to the confero_platform installation directory in the Galaxy tools directory: 
 
-# In case you want to use Galaxy, confero can be installed in:
-/your_galaxy_home_path/tools
+$ cd /path/to/galaxy-dist/tools
+$ ln -s /path/to/confero_platform
 
-# In your Galaxy tool_conf.xml, add Confero tools
+# In your Galaxy tool_conf.xml file, add the Confero section and tools:
 
 <section name="Confero Platform" id="confero_platform">
     <label text="Data Import" id="confero_platform_data_import" />
@@ -129,103 +139,32 @@ opt/
     <tool file="confero_platform/galaxy/extract_gene_set_matrix.xml" />
     <tool file="confero_platform/galaxy/extract_gene_set_overlap_matrix.xml" />
     <tool file="confero_platform/galaxy/extract_contrast_data_subset.xml" />
-    <label text="GSEA Module" id="confero_platform_gsea_module" />
-    <tool file="confero_platform/galaxy/create_ranked_lists.xml" />
+    <label text="Functional Enrichment Analysis Module" id="confero_platform_enrich_analysis_module" />
+    <tool file="confero_platform/galaxy/create_rnk_deg_lists.xml" />
     <tool file="confero_platform/galaxy/analyze_data.xml" />
     <tool file="confero_platform/galaxy/extract_gsea_leading_edge_matrix.xml" />
-    <tool file="confero_platform/galaxy/extract_gsea_results_matrix.xml" />
- </section>
+    <tool file="confero_platform/galaxy/extract_analysis_results_matrix.xml" />
+</section>
 
- # In your datatype_conf.xml, add the Confero specific data types
+# In your Galaxy datatype_conf.xml file, add the Confero data types:
+
 <!-- Confero Platform Datatypes -->
-<datatype extension="ctkreporthtml" type="galaxy.datatypes.images:Html" subclass="True"/>
-<datatype extension="ctkcontrastdataset" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkgeneset" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkrnk" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkgsearesultshtml" type="galaxy.datatypes.images:Html" subclass="True"/>
-<datatype extension="ctkgsealeadingedgematrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkgsearesultsmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkgenesetmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
-<datatype extension="ctkgenesetoverlapmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
-<datatype extension="rlimmaobject" type="galaxy.datatypes.data:Data" subClass="true" mimetype="application/octet-stream" display_in_upload="true"/>
+<datatype extension="cforeporthtml" type="galaxy.datatypes.images:Html" subclass="True"/>
+<datatype extension="cfocontrastdataset" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="cfogeneset" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
+<datatype extension="cfornklist" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
+<datatype extension="cfodeglist" type="galaxy.datatypes.data:Text" subclass="True" display_in_upload="true"/>
+<datatype extension="cfogsearesultshtml" type="galaxy.datatypes.images:Html" subclass="True"/>
+<datatype extension="cfohypergresultshtml" type="galaxy.datatypes.images:Html" subclass="True"/>
+<datatype extension="cfogsealeadingedgematrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="cfogsearesultsmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="cfohypergresultsmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="cfogenesetmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="cfogenesetoverlapmatrix" type="galaxy.datatypes.tabular:Tabular" subclass="True" display_in_upload="true"/>
+<datatype extension="rlimmaobject" type="galaxy.datatypes.data:Data" subclass="True" mimetype="application/octet-stream" display_in_upload="true"/>
+<!-- End Confero Platform Datatypes -->
 
-# Restart your Galaxy instance
+# Important: make sure the Galaxy system user's environment is using the same Perl used to set up and run Confero
 
-    
-##############################################################
-# Command line usage
-##############################################################
-
-Environment Setup
------------------
-    
-For convenience you could create and export an environment variable $CONFERO_HOME:
-
-CONFERO_HOME=/where_you_checked_out/confero_platform
-export CONFERO_HOME
-PATH=$CONFERO_HOME/bin:$PATH
-
-
-    
-Confero command wrapper
------------------------
-    
-The Confero command runner is:
-
-cfo_run_cmd.pl --help
-Usage:
-  cfo_run_cmd.pl [command] [options]
-  
-  Commands:
-      process_data_file                  Check and process a data file (e.g. contrast data set, gene set list)
-      process_submit_data_file           Check, process and submit a data file (e.g. contrast data set, gene set list)
-      create_ranked_lists                Create ranked list expression profiles from a contrast dataset or contrast file or one in Confero DB
-      analyze_data                       Analyze data for gene set enrichment using Confero DB, MSigDB, GeneSigDB, etc. gene set collections
-      extract_gsea_leading_edge_matrix   Extract GSEA leading edge matrix from a GSEA result
-      extract_gsea_results_matrix        Extract GSEA results data matrix from one or more GSEA results
-      extract_gene_set_matrix            Extract gene set matrix from specific gene sets or one or more gene set databases
-      extract_gene_set_overlap_matrix    Extract gene set overlap matrix from a gene set matrix or GSEA leading edge matrix
-      extract_contrast_data_subset       Extract a subset of contrasts from an contrast dataset file or one in Confero DB
-
-  Options:
-      --help                             Print usage message and exit
-
-  Run cfo_run_cmd.pl [command] --help for command options
-
-
-    
-Process (and Submit) Data File
-------------------------------
-Examples
-
-To process and check outputs without doing database submission:
-
-cfo_run_cmd.pl process_data_file \
---data-file=/path/to/input_data_file.txt \
---data-type=idMAPS \
---report-file=/path/to/processing_report.txt \
---processed-file=/path/to/processed_data_file.txt
-
-Or for convenience:
-
-cfo_process_data_file.pl \
---data-file=/path/to/input_data_file.txt \
---data-type=idMAPS \
---report-file=/path/to/processing_report.txt \
---processed-file=/path/to/processed_data_file.txt
-
-To output processed file to STDOUT and ignore report:
-
-cfo_process_data_file.pl \
---data-file=/path/to/input_data_file.txt \
---data-type=idMAPS
-
-To process and submit to database:
-
-cfo_run_cmd.pl process_submit_data_file \
---data-file=/path/to/input_data_file.txt \
---data-type=idMAPS \
---report-file=/path/to/processing_report.txt \
---processed-file=/path/to/processed_data_file.txt
-
+# Restart your Galaxy server instance
 
