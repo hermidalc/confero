@@ -14,7 +14,7 @@ use Storable qw(lock_nstore);
 sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
 }
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 # Unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
@@ -28,7 +28,7 @@ GetOptions(
 pod2usage(-exitstatus => 0, -verbose => 2) if $man;
 pod2usage(-message => 'Missing CTK Dataset ID') unless @ARGV and scalar(@ARGV) == 1;
 pod2usage(-message => "Invalid CTK dataset ID $ARGV[0]") unless is_valid_id($ARGV[0]);
-print "#", '-' x 100, "#\n",
+print "#", '-' x 120, "#\n",
       "# Confero Dataset Deleter [" . scalar localtime() . "]\n\n";
 my $result_message;
 eval {
