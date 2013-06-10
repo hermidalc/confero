@@ -14,7 +14,7 @@ sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
 }
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 # Unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
@@ -25,7 +25,7 @@ GetOptions(
     'man' => \$man,
 ) || pod2usage(-verbose => 0);
 pod2usage(-exitstatus => 0, -verbose => 2) if $man;
-print "#", '-' x 100, "#\n",
+print "#", '-' x 120, "#\n",
       "# Confero Gene Set DB Galaxy Options Creator/Updater [" . scalar localtime() . "]\n\n";
 my %gene_set_names;
 my $num_total_gene_sets_parsed = 0;
@@ -47,6 +47,9 @@ for my $gsdb_file_name (natsort values %CTK_GSEA_GSDBS) {
     $num_total_gene_sets_parsed += $num_gene_sets_parsed;
 }
 print "--> $num_total_gene_sets_parsed <-- total gene sets parsed\nWriting Galaxy options file id_options_gsdb_gene_sets.txt\n";
+if (!-e "$FindBin::Bin/../galaxy/data") {
+    mkdir "$FindBin::Bin/../galaxy/data" or die "ERROR: Could not create directory $FindBin::Bin/../galaxy/data: $!\n";
+}
 open(my $opts_fh, '>', "$FindBin::Bin/../galaxy/data/id_options_gsdb_gene_sets.txt") 
     or die "ERROR: Could not create $FindBin::Bin/../galaxy/data/id_options_gsdb_gene_sets.txt: $!\n";
 print $opts_fh "# Confero Galaxy Drop-down Menu Options\n",
