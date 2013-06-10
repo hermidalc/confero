@@ -160,8 +160,8 @@ system("$FindBin::Bin/cfo_create_gsdb_gene_set_galaxy_opts.pl") == 0
 system("$FindBin::Bin/cfo_define_organisms.pl") == 0 
     or warn "\nCommand failed! Exit code: ", $? >> 8, "\n\n";
 print "[Web Server]\n";
-# open Galaxy xml file and replace 'DANCER_URL' with the LocalConfig variable $CTK_WEB_SERVER_HOST
-system("sed -i 's!CONFERO_WEB_SERVER_URL!$CTK_WEB_SERVER_HOST!g' $FindBin::Bin/../galaxy/view_manage_data.xml") == 0 
+# open Galaxy xml file and replace 'CONFERO_WEB_SERVER_URL' with the LocalConfig http://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/
+system("sed -i 's!CONFERO_WEB_SERVER_URL!http://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/!g' $FindBin::Bin/../galaxy/view_manage_data.xml") == 0 
     or warn "\nFailed to find CONFERO_WEB_SERVER_URL in $FindBin::Bin/../galaxy/view_manage_data.xml! Exit code: ", $? >> 8, "\n\n";
 system("$FindBin::Bin/cfo_app_server.pl start -h $CTK_WEB_SERVER_HOST -p $CTK_WEB_SERVER_PORT") == 0 
     or warn "\nCommand failed! Exit code: ", $? >> 8, "\n\n";
