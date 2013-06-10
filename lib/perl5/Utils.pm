@@ -28,7 +28,7 @@ our @EXPORT_OK = qw(
     intersect_arrays
     distinct
 );
-our $VERSION = '0.8';
+our $VERSION = '0.1';
 
 sub clean_whitespace {
     my $value = shift;
