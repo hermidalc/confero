@@ -75,7 +75,7 @@
             <when value="entire_gene_set_dbs">
                 <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Select From the Following Gene Set DBs">
                     <options>
-                        <option name="All" value="cfodb,msigdb,genesigdb">
+                        <option name="All (Confero, MSigDB, GeneSigDB)" value="cfodb,msigdb,genesigdb">
                             <option name="Confero Gene Set DB" value="cfodb">
                                 <option name="Contrast gene sets" value="cfodb.contrasts"/>
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
@@ -104,6 +104,7 @@
                                     <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
                                 </option>
                                 <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
+                                <option name="C7 (immunologic signatures)" value="msigdb.c7"/>
                             </option>
                             <option name="GeneSigDB" value="genesigdb"/>
                         </option>
