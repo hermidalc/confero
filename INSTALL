@@ -11,7 +11,7 @@ Java JRE => 1.6 or 1.7
 $ git clone https://git.code.sf.net/p/confero/code confero_platform
 
 # Copy and set up your local configuration file: 
-# In the folder: confero_platform/lib/perl5/Confero:
+# In the folder: confero_platform/lib/perl5/Confero/:
 
 $ cp LocalConfig.pm.sample LocalConfig.pm
 
@@ -32,7 +32,7 @@ $CTK_WEB_SERVER_PORT		# Apache server port
 ##############################################################
 # From confero_platform root directory run the dependency installer:
 
-$ ./scripts/cfo_install_deps.sh
+$ ./scripts/cfo_install_deps.pl
 
 
 ##############################################################
