@@ -13,7 +13,7 @@ sub sig_handler {
     die "\n\nConfero $0 command exited gracefully [", scalar localtime, "]\n\n";
 }
 
-our $VERSION = '0.8';
+our $VERSION = '0.1';
 
 Confero::Cmd->process_data_file();
 exit;
