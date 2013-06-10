@@ -12,7 +12,7 @@ use File::Glob qw(:globally :nocase);
 use Getopt::Long qw(:config auto_help auto_version);
 use Pod::Usage qw(pod2usage);
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 
 sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
@@ -21,19 +21,20 @@ sub sig_handler {
 # Unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
+
 my $man = 0;
 GetOptions(
     'man' => \$man,
 ) || pod2usage(-verbose => 0);
 pod2usage(-exitstatus => 0, -verbose => 2) if $man;
-print "#", '-' x 100, "#\n",
+print "#", '-' x 120, "#\n",
       "# Confero MSigDB C2 AR (all regulated) GMT Database Builder/Updater [" . scalar localtime() . "]\n\n";
-my @c2_file_paths = grep { m/c2\.(all|cgp)\.v.+?\.gmt/i } <$CTK_GSEA_GENE_SET_DB_DIR/c2.*.gmt>;
-for my $c2_file_path (@c2_file_paths) {
-    print "Parsing $c2_file_path:\n";
-    my ($gsdb_file_name_beginning, $gsdb_file_name_ending) = basename($c2_file_path) =~ /^(.+?)\.(v\d+\.\d+\..+?)$/i;
+my @msigdb_c2_file_paths = grep { m/c2\.(all|cgp)\.v.+?\.gmt/i } <$CTK_GSEA_GENE_SET_DB_DIR/c2.*.gmt>;
+for my $msigdb_c2_file_path (@msigdb_c2_file_paths) {
+    print "Parsing $msigdb_c2_file_path:\n";
+    my ($gsdb_file_name_beginning, $gsdb_file_name_ending) = basename($msigdb_c2_file_path) =~ /^(.+?)\.(v\d+\.\d+\..+?)$/i;
     my (%gene_sets, $num_gene_sets_parsed);
-    open(GSDBFILE, '<', $c2_file_path) or die "Could not open $c2_file_path: $!\n";
+    open(GSDBFILE, '<', $msigdb_c2_file_path) or die "Could not open $msigdb_c2_file_path: $!\n";
     while (<GSDBFILE>) {
         m/^\s*$/ && next;
         my ($gene_set_name, $gene_set_url, @gene_ids) = split /\t+/;
