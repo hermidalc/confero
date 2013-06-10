@@ -15,7 +15,7 @@ use Sort::Key::Multi qw(s2keysort);
 use Sort::Key::Natural qw(natsort);
 use Utils qw(distinct);
 
-our $VERSION = '0.8';
+our $VERSION = '0.1';
 
 sub distinct_annotations {
     my %seen = ();
