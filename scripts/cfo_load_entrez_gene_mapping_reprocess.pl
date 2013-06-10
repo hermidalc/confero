@@ -18,6 +18,7 @@ use File::Basename qw(basename fileparse);
 use File::Copy qw(copy move);
 use File::Fetch;
 use File::Temp ();  # () for OO-interface
+use File::Path qw(mkpath);
 use Getopt::Long qw(:config auto_help auto_version);
 use List::Util qw(min);
 use Storable qw(lock_nstore lock_retrieve);
@@ -37,7 +38,7 @@ $Data::Dumper::Deepcopy = 1;
 sub sig_handler {
     die "\n\n$0 program exited gracefully [", scalar localtime, "]\n\n";
 }
-our $VERSION = '0.0.1';
+our $VERSION = '0.1';
 # unbuffer error and output streams (make sure STDOUT is last so that it remains the default filehandle)
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
@@ -57,7 +58,7 @@ if (`ps -eo cmd | grep -v grep | grep -c "perl $0"` > 1) {
 # --no-entrez-processing skips processing of Entrez Gene data and uses existing local data structures (default false)
 # --download-netaffx downloads new NetAffx annotation files (default false)
 # --no-mapping-file-processing skips processing of mapping files using latest Entrez Gene data and uses existing files (default false)
-# --no-db-reprocessing skips full reprocessing of all CTK database using latest Entrez Gene data and mapping files (default false)
+# --no-db-reprocessing skips full reprocessing of all Confero database using latest Entrez Gene data and mapping files (default false)
 my $no_interactive = 0;
 my $num_parallel_procs = 0;
 my $no_entrez_download = 0;
@@ -97,8 +98,11 @@ GetOptions(
 #pod2usage(-exitstatus => 0, -verbose => 2) if $man;
 print "#", '-' x 120, "#\n",
       "# Confero Entrez Gene Data Loader, Mapping File Creator and Database Reprocessor [" . scalar localtime() . "]\n\n";
+mkdir($CTK_TEMP_DIR, 0750) or die "ERROR: could not create $CTK_TEMP_DIR directory: $!\n"
+    unless -e $CTK_TEMP_DIR;
 my $tmp_dir = File::Temp->newdir('X' x 10, DIR => $CTK_TEMP_DIR, CLEANUP => $debug ? 0 : 1);
-mkdir "$tmp_dir/$_" or die "Could not create $tmp_dir/$_ directory: $!" for qw(entrez_gene affymetrix agilent geo illumina mappings gsea reprocessing);
+mkdir("$tmp_dir/$_", 0750) or die "ERROR: could not create $tmp_dir/$_ directory: $!\n" 
+    for qw(entrez_gene affymetrix agilent geo illumina mappings gsea reprocessing);
 # entrez gene
 print "[Entrez Gene Data]\n";
 my $entrez_data_tmp_dir = "$tmp_dir/entrez_gene";
@@ -130,7 +134,8 @@ if (!$no_entrez_download) {
     }
     # download and uncompress organism-specific gene_info files or parse master gene_info file to create organism-specific if one doesn't exist at NCBI
     for my $organism_name (sort keys %CTK_ENTREZ_GENE_ORGANISM_DATA) {
-        if (defined $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_file_uri}) {
+        if (exists $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_file_uri} and
+            defined $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_file_uri}) {
             my $ff = File::Fetch->new(uri => $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_file_uri}) 
                 or die "\n\nERROR: File::Fetch object constructor error\n\n";
             my ($gi_file_basename, undef, $gi_file_ext) = fileparse($CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_file_uri}, qr/\.[^.]*/);
@@ -144,18 +149,18 @@ if (!$no_entrez_download) {
                 system($uncompress_cmd) == 0 or die "\nERROR: $uncompress_cmd system call error: ", $? >> 8, "\n\n";
             }
         }
-        elsif (defined $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{parse_gene_info}) {
+        elsif (exists $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_tax_ids} and
+               defined $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_tax_ids}) {
             (my $organism_file_basename = $organism_name) =~ s/\s+/_/g;
             print "Parsing master gene_info file to create $organism_file_basename.gene_info, ",
-                  "using taxonomy IDs ", join(',', @{$CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{parse_tax_ids}}), ': ';
-            my %tax_ids = map { $_ => 1 } @{$CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{parse_tax_ids}};
+                  "using taxonomy IDs ", join(',', @{$CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_tax_ids}}), ': ';
+            my %tax_ids = map { $_ => 1 } @{$CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{gene_info_tax_ids}};
             open(my $gene_info_fh, '<', "$entrez_data_work_dir/gene_info") 
                 or die "\n\nERROR: could not open $entrez_data_work_dir/gene_info: $!\n\n";
             open(my $output_fh, '>', "$entrez_data_work_dir/$organism_file_basename.gene_info") 
                 or die "\n\nERROR: could not create $entrez_data_work_dir/$organism_file_basename.gene_info: $!\n\n";
             # skip column header for organism-specific gene_info file
             my $col_header = <$gene_info_fh>;
-            # print OUTFILE $header;
             my $genes_added = 0;
             while (<$gene_info_fh>) {
                 my ($tax_id) = split /\t/;
@@ -170,7 +175,8 @@ if (!$no_entrez_download) {
             die "\n\nERROR: problem with parsing or tax IDs, 0 genes added!\n\n" if $genes_added == 0;
         }
         else {
-            die "\n\nERROR: problem with $organism_name Entrez Gene configuration! Missing gene_info_file_uri hash key/value, please check the configuration file.\n\n";
+            die "\n\nERROR: problem with $organism_name Entrez Gene configuration! ",
+                "Missing gene_info_file_uri or gene_info_tax_ids, please check the configuration file.\n\n";
         }
     }
 }
@@ -207,7 +213,10 @@ if (!$no_entrez_processing) {
             $add_gene_info_hashref->{$gene_id}->{description} = ($gene_desc and $gene_desc ne '-') ? $gene_desc : undef;
             $add_gene_info_hashref->{$gene_id}->{synonyms} = ($symbol_synonyms_str and $symbol_synonyms_str ne '-') ? $symbol_synonyms_str : undef;
             # add gene symbols and maps for organism and only those from organism mitochondria which don't already exist for organism
-            if ($tax_id == $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{tax_id} or !exists $organism_gene_symbols{$gene_symbol}) {
+            if ((exists $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{tax_id} and 
+                 defined $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{tax_id} and 
+                 $tax_id == $CTK_ENTREZ_GENE_ORGANISM_DATA{$organism_name}{tax_id}) or 
+                !exists $organism_gene_symbols{$gene_symbol}) {
                 $organism_gene_symbols{$gene_symbol}++;
                 $symbol2gene_ids_map->{$organism_name}->{$gene_symbol}->{$gene_id}++;
                 $uc_symbol2gene_ids_map->{$organism_name}->{uc($gene_symbol)}->{$gene_id}++;
@@ -346,16 +355,19 @@ if (!$no_entrez_processing) {
     }
     close($gene2unigene_fh);
     print "$unigene_ids_processed relevant unigene entries processed\n";
-    # lock data structures
-    Hash::Util::lock_hashref_recurse($gene_info_hashref);
-    Hash::Util::lock_hashref_recurse($gene_history_hashref);
-    Hash::Util::lock_hashref_recurse($add_gene_info_hashref);
-    Hash::Util::lock_hashref_recurse($symbol2gene_ids_map);
-    Hash::Util::lock_hashref_recurse($uc_symbol2gene_ids_map);
-    Hash::Util::lock_hashref_recurse($gene_id2symbols_map);
-    Hash::Util::lock_hashref_recurse($accession2gene_ids_map);
-    Hash::Util::lock_hashref_recurse($ensembl2gene_ids_map);
-    Hash::Util::lock_hashref_recurse($unigene2gene_ids_map);
+    # Hash::Util::lock_hashref_recurse is broken in Perls < 5.14
+    if ($^V >= 'v5.14') {
+        # lock data structures
+        Hash::Util::lock_hashref_recurse($gene_info_hashref);
+        Hash::Util::lock_hashref_recurse($gene_history_hashref);
+        Hash::Util::lock_hashref_recurse($add_gene_info_hashref);
+        Hash::Util::lock_hashref_recurse($symbol2gene_ids_map);
+        Hash::Util::lock_hashref_recurse($uc_symbol2gene_ids_map);
+        Hash::Util::lock_hashref_recurse($gene_id2symbols_map);
+        Hash::Util::lock_hashref_recurse($accession2gene_ids_map);
+        Hash::Util::lock_hashref_recurse($ensembl2gene_ids_map);
+        Hash::Util::lock_hashref_recurse($unigene2gene_ids_map);
+    }
     # initialize EntrezGene singleton object
     Confero::EntrezGene->instance(
         gene_info => $gene_info_hashref,
@@ -416,8 +428,11 @@ if (!$no_entrez_processing) {
         }
         close($map_fh);
         print "$num_maps_written maps\n";
-        # lock data structure
-        Hash::Util::lock_hashref_recurse($gene_symbol2id_bestmap->{$organism_name});
+        # Hash::Util::lock_hashref_recurse is broken in Perls < 5.14
+        if ($^V >= 'v5.14') {
+            # lock data structure
+            Hash::Util::lock_hashref_recurse($gene_symbol2id_bestmap->{$organism_name});
+        }
         $num_maps_written = 0;
         print "Generating ${map_file_basename}.ucmap: ";
         open(my $ucmap_fh, '>', "$mapping_data_work_dir/${map_file_basename}.ucmap") 
@@ -610,7 +625,7 @@ if (!$no_mapping_file_processing) {
                 for (@field_data) {
                     s/^\s+//;
                     s/\s+$//;
-                    s/^---$//
+                    s/^---$//;
                 }
                 my %entrez_gene_ids;
                 if (defined $netaffx_annot_tab_format_version and $netaffx_annot_tab_format_version eq '1.0') {
@@ -632,8 +647,15 @@ if (!$no_mapping_file_processing) {
                         my @gene_data = split /$AFFY_ANNOT_SEPARATOR/o, $field_data[$field_pos{'gene_assignment'}];
                         for my $gene_info (@gene_data) {
                             my ($accession, $gene_symbol, $gene_title, $cytoband, $entrez_gene_id) = split /\s*\/\/\s*/, $gene_info;
-                            # sometimes Entrez Gene info fields can be truncated so have to check if ID is defined
-                            if (defined $entrez_gene_id) {
+                            for ($accession, $gene_symbol, $gene_title, $cytoband, $entrez_gene_id) {
+                                # sometimes fields can be truncated so check if defined
+                                next unless defined;
+                                s/^\s+//;
+                                s/\s+$//;
+                                s/^---$//;
+                            }
+                            # sometimes fields can be truncated so have to check if ID is defined and not blank
+                            if (defined $entrez_gene_id and $entrez_gene_id ne '') {
                                 die "\n\nERROR: Entrez Gene ID '$entrez_gene_id' is not an integer\n\n" unless is_integer($entrez_gene_id);
                                 $entrez_gene_ids{$entrez_gene_id}++;
                             }
@@ -966,7 +988,7 @@ eval {
         if ($ctk_db->resultset('Gene')->count() > 0) {
             print "\n", ($num_parallel_procs > 1 ? "[Reprocess]\n" : "[Reprocess & Database Reload]\n");
             if (!$no_interactive and !$no_db_reprocessing) {
-                print "Would you like to fully reprocess all CTK database data? (type 'no' to do an incremental database update) [yes] ";
+                print "Would you like to fully reprocess all Confero DB data? (type 'no' to do an incremental database update) [yes] ";
                 chomp(my $answer = <STDIN>);
                 $answer = 'yes' if $answer eq '';
                 $no_db_reprocessing = ($answer =~ /^y(es|)$/i) ? 0 : 1;
@@ -1055,7 +1077,7 @@ eval {
                 # not needed anymore, %genes was need in submit_data_file() when using direct DBI commands for (contrast)gene_set_gene tables, still defining empty %genes though for now
                 #my %genes = map { $_->{id} => $_ } @genes;
                 my %genes;
-                # load all reprocessed CTK data into database
+                # load all reprocessed Confero data into database
                 print +($num_parallel_procs > 1 ? "Reloading " : "Reprocessing and loading "), scalar(@contrast_datasets), " contrast datasets:\n";
                 for my $dataset (@contrast_datasets) {
                     my $dataset_id = construct_id($dataset->name);
@@ -1118,11 +1140,12 @@ eval {
             # skip CTK full database reprocessing
             else {
                 if ($no_entrez_download) {
-                    print "Skipping reprocessing of all CTK data, assuming since Entrez Gene public files were not updated then database is still valid\n";
+                    print "Skipping reprocessing of Confero DB data, since Entrez Gene public files were ", 
+                          "not updated/changed then database should still be synced and valid\n";
                 }
                 else {
-                    print "Skipping reprocessing of all CTK data, doing incremental database update\n";
-                    die "\nIncremental update feature not implemented yet\n";
+                    print "Skipping reprocessing of Confero DB data, doing incremental database update\n";
+                    die "\nIncremental update feature implemented yet\n";
                 }
                 ## delete only those genes (and link to gene sets) which don't exist in Entrez Gene anymore
                 ## update genes (and link to gene sets) which are discontinued but have a current equivalent
@@ -1188,44 +1211,58 @@ eval {
         }
         # move files to final location
         print "\n[Move Files]\nMoving all files to permanent location and setting permissions\n";
+        # not needed right now since I mkpaths below
+        #mkdir($CTK_DATA_DIR, 0755) or die "Could not create $CTK_DATA_DIR: $!" unless -e $CTK_DATA_DIR;
         if (!$no_entrez_processing) {
+            mkpath($CTK_ENTREZ_GENE_DATA_DIR, { mode => 0755 }) unless -e $CTK_ENTREZ_GENE_DATA_DIR;
             for my $file_path (glob("$entrez_data_tmp_dir/*")) {
-                print "$file_path\n" if $verbose;
-                chmod(0640, $file_path);
+                print "$file_path\n" if $debug or $verbose;
+                chmod(0644, $file_path);
                 copy($file_path, "$CTK_ENTREZ_GENE_DATA_DIR/" . basename($file_path)) or die "Could not move $file_path: $!";
             }
         }
         if ($download_netaffx) {
+            mkpath($CTK_AFFY_ANNOT_DATA_DIR, { mode => 0755 }) unless -e $CTK_AFFY_ANNOT_DATA_DIR;
             for my $file_path (glob("$netaffx_data_work_dir/*")) {
-                print "$file_path\n" if $verbose;
+                print "$file_path\n" if $debug or $verbose;
+                chmod(0644, $file_path);
                 copy($file_path, "$CTK_AFFY_ANNOT_DATA_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
             }
         }
         if ($download_agilent) {
+            mkpath($CTK_AGILENT_ANNOT_DATA_DIR, { mode => 0755 }) unless -e $CTK_AGILENT_ANNOT_DATA_DIR;
             for my $file_path (glob("$agilent_data_work_dir/*")) {
-                print "$file_path\n" if $verbose;
+                print "$file_path\n" if $debug or $verbose;
+                chmod(0644, $file_path);
                 copy($file_path, "$CTK_AGILENT_ANNOT_DATA_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
             }
         }
         if ($download_geo) {
+            mkpath($CTK_GEO_ANNOT_DATA_DIR, { mode => 0755 }) unless -e $CTK_GEO_ANNOT_DATA_DIR;
             for my $file_path (glob("$geo_data_work_dir/*")) {
-                print "$file_path\n" if $verbose;
+                print "$file_path\n" if $debug or $verbose;
+                chmod(0644, $file_path);
                 copy($file_path, "$CTK_GEO_ANNOT_DATA_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
             }
         }
         if ($download_illumina) {
+            mkpath($CTK_ILLUMINA_ANNOT_DATA_DIR, { mode => 0755 }) unless -e $CTK_ILLUMINA_ANNOT_DATA_DIR;
             for my $file_path (glob("$illumina_data_work_dir/*")) {
-                print "$file_path\n" if $verbose;
+                print "$file_path\n" if $debug or $verbose;
+                chmod(0644, $file_path);
                 copy($file_path, "$CTK_ILLUMINA_ANNOT_DATA_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
             }
         }
         for my $file_path (glob("$mapping_data_work_dir/*")) {
-            print "$file_path\n" if $verbose;
-            chmod(0640, $file_path);
+            mkpath($CTK_DATA_ID_MAPPING_FILE_DIR, { mode => 0755 }) unless -e $CTK_DATA_ID_MAPPING_FILE_DIR;
+            print "$file_path\n" if $debug or $verbose;
+            chmod(0644, $file_path);
             copy($file_path, "$CTK_DATA_ID_MAPPING_FILE_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
         }
         for my $file_path (glob("$gsea_data_work_dir/*")) {
-            chmod(0640, $file_path);
+            mkpath($CTK_GSEA_MAPPING_FILE_DIR, { mode => 0755 }) unless -e $CTK_GSEA_MAPPING_FILE_DIR;
+            print "$file_path\n" if $debug or $verbose;
+            chmod(0644, $file_path);
             copy($file_path, "$CTK_GSEA_MAPPING_FILE_DIR/" . basename($file_path)) or die "Could not copy $file_path: $!";
         }
         my $old_cwd = cwd();
@@ -1250,6 +1287,7 @@ exit;
 
 sub process_multi_gene_map {
     my ($source_id, $src2gene_id_map, $gene2src_id_map, @gene_ids) = @_;
+    # debugging
     #print STDERR "START: $source_id ", join(' ', @gene_ids), "\nREPRE: $gene_id\nALTER: ", join(' ', @alt_source_ids);
     #<STDIN>;
     my $gene_id = scalar(@gene_ids) > 1 ? get_best_gene_id(@gene_ids) 
@@ -1349,9 +1387,12 @@ sub process_platform_mapping_files {
         }
     }
     close($map_fh);
-    # lock data structure
-    Hash::Util::lock_hashref_recurse($src2gene_id_map);
-    Hash::Util::lock_hashref_recurse($gene2src_id_map);
+    # Hash::Util::lock_hashref_recurse is broken in Perls < 5.14
+    if ($^V >= 'v5.14') {
+        # lock data structure
+        Hash::Util::lock_hashref_recurse($src2gene_id_map);
+        Hash::Util::lock_hashref_recurse($gene2src_id_map);
+    }
     # generate best map file and data structure
     my $src2gene_id_bestmap;
     for my $source_id (natsort keys %{$src2gene_id_map}) {
@@ -1382,7 +1423,7 @@ sub process_platform_mapping_files {
             $src2gene_id_bestmap->{$source_id}->{no_gene_map}++;
         }
     }
-    # write out reverse map and best map files (not used by CTK only for reference)
+    # write out reverse map and best map files (not used by Confero only for reference)
     open(my $revmap_fh, '>', "$mapping_data_work_dir/$array_symbol.revmap") 
         or die "\n\nERROR: could not create output mapping file $mapping_data_work_dir/$array_symbol.revmap: $!\n\n";
     print "Generating $array_symbol.revmap\n";
@@ -1400,8 +1441,11 @@ sub process_platform_mapping_files {
             defined $src2gene_id_bestmap->{$source_id}->{gene_id} ? $src2gene_id_bestmap->{$source_id}->{gene_id} : '', "\n";
     }
     close($bestmap_fh);
-    # lock data structure
-    Hash::Util::lock_hashref_recurse($src2gene_id_bestmap);
+    # Hash::Util::lock_hashref_recurse is broken in Perls < 5.14
+    if ($^V >= 'v5.14') {
+        # lock data structure
+        Hash::Util::lock_hashref_recurse($src2gene_id_bestmap);
+    }
     # serialize and store data structures
     #print "Serializing and storing ${array_symbol}.map.pls\n";
     #lock_nstore($src2gene_id_map, "$mapping_data_work_dir/${array_symbol}.map.pls") 
@@ -1439,7 +1483,7 @@ cfo_load_entrez_gene_mapping_reprocess.pl - Confero Entrez Gene Data Loader, Map
     --no-agilent-processing        Skip processing of Agilent annotation files and use existing data structures (default false)
     --no-geo-processing            Skip processing of NCBI GEO annotation files and use existing data structures (default false)
     --no-illumina-processing       Skip processing of Illumina annotation files and use existing data structures (default false)
-    --no-db-reprocessing           Skip full reprocessing of CTK database from latest Entrez Gene data and mapping files (default false)
+    --no-db-reprocessing           Skip reprocessing of Confero DB data using latest Entrez Gene data and mapping files (default false)
     --help                         Display usage message and exit
     --version                      Display program version and exit
 
