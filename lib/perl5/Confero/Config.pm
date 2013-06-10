@@ -467,7 +467,7 @@ const our $CTK_GSEA_REPORTS_CACHE_DIR                => "$ENV{HOME}/gsea_home/re
 const our $CTK_GSEA_GENESIGDB_VERSION                => '4.0';
 const our $CTK_GSEA_GENESIGDB_FILE_URI               => 'http://compbio.dfci.harvard.edu/genesigdb/download/ALL_SIGSv4.gmt';
 # local, not exported
-const my $CTK_GSEA_MSIGDB_VERSION                    => '3.1';
+const my $CTK_GSEA_MSIGDB_VERSION                    => '4.0';
 # 'entrez' or 'symbols'
 const our $CTK_GSEA_GSDB_ID_TYPE                     => 'symbols';
 const our %CTK_GSEA_GSDBS                            => (
@@ -492,6 +492,7 @@ const our %CTK_GSEA_GSDBS                            => (
     'msigdb.c5.cc'          => "c5.cc.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
     'msigdb.c5.mf'          => "c5.mf.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
     'msigdb.c6'             => "c6.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
+    'msigdb.c7'             => "c7.all.v$CTK_GSEA_MSIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
     'genesigdb'             => "genesigdb.v$CTK_GSEA_GENESIGDB_VERSION.$CTK_GSEA_GSDB_ID_TYPE.gmt",
 );
 const our $CTK_GSEA_REPORT_FILE_NAME_REGEXP          => qr/^gsea_report_for_na_(pos|neg)_\d+\.xls$/o;
