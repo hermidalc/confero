@@ -1,4 +1,4 @@
-<tool name="Extract Gene Set Overlap Matrix" id="confero_platform_extract_gene_set_overlap_matrix" version="0.0.1">
+<tool name="Extract Gene Set Overlap Matrix" id="confero_platform_extract_gene_set_overlap_matrix" version="0.1">
     <description>from a gene set matrix or GSEA leading edge matrix</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_gene_set_overlap_matrix
@@ -7,14 +7,14 @@
         --output-type=$data_matrix_type
     </command>
     <inputs>
-        <param name="gene_set_matrix" type="data" format="ctkgenesetmatrix" label="Gene Set/Leading Edge Matrix"/>
+        <param name="gene_set_matrix" type="data" format="cfogenesetmatrix" label="Gene Set/Leading Edge Matrix"/>
         <param name="data_matrix_type" type="select" force_select="true" optional="false" label="Output Matrix Type">
             <option value="num_overlap" selected="true">Num Overlap</option>
             <option value="pct_overlap">Pct Overlap</option>
         </param>
     </inputs>
     <outputs>
-        <data format="ctkgenesetoverlapmatrix" name="gene_set_overlap_matrix" label="Gene Set Overlap Matrix ($data_matrix_type.value_label) for $on_string: $gene_set_matrix.name"/>
+        <data format="cfogenesetoverlapmatrix" name="gene_set_overlap_matrix" label="Gene Set Overlap Matrix ($data_matrix_type.value_label) for $on_string: $gene_set_matrix.name"/>
     </outputs>
     <help>
 Extract a square gene set overlap matrix from a gene set matrix or GSEA leading edge matrix.

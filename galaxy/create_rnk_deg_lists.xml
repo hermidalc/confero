@@ -1,0 +1,91 @@
+<tool name="Create Ranked or DEG Lists" id="confero_platform_create_rnk_deg_lists" force_history_refresh="True" version="0.1">
+    <description>from a contrast dataset or single contrast in your history or in the Confero DB</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl create_rnk_deg_lists
+        --rank-column="$rank_column"
+        --output-id-type="$id_type"
+        #if $data_source_cond.data_source == "confero_db"
+        --data-id="$data_source_cond.data_type_cond.data_id"
+            #if $rank_column.value == "S" or $rank_column.value == "M"
+        --output-file=$rnk_list_1
+            #else if $rank_column.value == "P"
+        --output-file=$deg_list_1
+            #end if
+            #if $data_source_cond.data_type_cond.data_type == "contrast_dataset"
+                #if $rank_column.value == "S" or $rank_column.value == "M"
+        --output-file-galaxy-id=$rnk_list_1.id
+                #else if $rank_column.value == "P"
+        --output-file-galaxy-id=$deg_list_1.id
+                #end if
+        --output-dir=$__new_file_path__
+            #end if
+        #else if $data_source_cond.data_source == "galaxy_history"
+        --input-file=$data_source_cond.dataset_file
+        --orig-filename="$data_source_cond.dataset_file.name"
+            #if $rank_column.value == "S" or $rank_column.value == "M"
+        --output-file=$rnk_list_2
+            #else if $rank_column.value == "P"
+        --output-file=$deg_list_2
+            #end if
+            #if $rank_column.value == "S" or $rank_column.value == "M"
+        --output-file-galaxy-id=$rnk_list_2.id
+            #else if $rank_column.value == "P"
+        --output-file-galaxy-id=$deg_list_2.id
+            #end if
+        --output-dir=$__new_file_path__
+        #end if
+    </command>
+    <inputs>
+        <conditional name="data_source_cond">
+            <param name="data_source" type="select" optional="false" label="Select Data From">
+                <option value="confero_db">Confero DB</option>
+                <option value="galaxy_history">Galaxy History</option>
+            </param>
+            <when value="confero_db">
+                <conditional name="data_type_cond">
+                    <param name="data_type" type="select" optional="false" label="Data type">
+                        <option value="contrast_dataset">Contrast Dataset</option>
+                        <option value="contrast">Contrast</option>
+                    </param>
+                    <when value="contrast_dataset">
+                        <param name="data_id" type="select" label="Contrast Dataset ID" dynamic_options="cfo_get_info('contrast_dataset_ids')"/>
+                    </when>
+                    <when value="contrast">
+                        <param name="data_id" type="select" label="Contrast ID" dynamic_options="cfo_get_info('contrast_ids')"/>
+                    </when>
+                </conditional>
+            </when>
+            <when value="galaxy_history">
+                <param name="dataset_file" type="data" format="cfocontrastdataset" label="Select Contrast Dataset"/>
+            </when>
+        </conditional>
+        <param name="rank_column" type="select" force_select="true" optional="false" label="Select S or M for Ranked List, P for DEG List">
+            <option value="S">Statistic Metric (S)</option>
+            <option value="M">Log2 Fold Change (M)</option>
+            <option value="P">Significance Level (P)</option>
+        </param>
+        <param name="id_type" type="select" force_select="true" optional="false" label="Output ID Type">
+            <option value="EntrezGene" selected="true">Entrez Gene</option>
+            <option value="GeneSymbol">Gene Symbol</option>
+            <help>IMPORTANT: for Confero Analyze Data tool use the default Entrez Gene IDs</help>
+        </param>
+    </inputs>
+    <outputs>
+        <data name="rnk_list_1" format="cfornklist" label="Ranked List for $data_source_cond.data_type_cond.data_id.value">
+            <filter>data_source_cond['data_source'] == "confero_db" and (rank_column == "S" or rank_column == "M")</filter>
+        </data>
+        <data name="rnk_list_2" format="cfornklist" label="Ranked List for $data_source_cond.dataset_file.name">
+            <filter>data_source_cond['data_source'] == "galaxy_history" and (rank_column == "S" or rank_column == "M")</filter>
+        </data>
+        <data name="deg_list_1" format="cfodeglist" label="DEG List for $data_source_cond.data_type_cond.data_id.value">
+            <filter>data_source_cond['data_source'] == "confero_db" and rank_column == "P"</filter>
+        </data>
+        <data name="deg_list_2" format="cfodeglist" label="DEG List for $data_source_cond.dataset_file.name">
+            <filter>data_source_cond['data_source'] == "galaxy_history" and rank_column == "P"</filter>
+        </data>
+    </outputs>
+    <code file="common_functions.py"/>
+    <help>
+This tool will generate ranked or DEG lists from a contrast dataset or single contrast in your Galaxy history or from the Confero DB.
+    </help>
+</tool>

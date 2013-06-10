@@ -1,4 +1,4 @@
-<tool name="Extract Contrast Data Subset" id="confero_platform_extract_contrast_data_subset" version="0.0.1">
+<tool name="Extract Contrast Data Subset" id="confero_platform_extract_contrast_data_subset" version="0.1">
     <description>from a contrast dataset</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_contrast_data_subset
@@ -26,7 +26,7 @@
                 </repeat>
             </when>
             <when value="galaxy_history">
-                <param name="dataset_file" type="data" format="ctkcontrastdataset" label="Select Contrast Dataset"/>
+                <param name="dataset_file" type="data" format="cfocontrastdataset" label="Select Contrast Dataset"/>
                 <repeat name="r_contrast_idxs" title="Contrasts">
                     <param name="contrast_idx" type="select" force_select="true" optional="false" dynamic_options="cfo_get_contrast_info_from_dataset('from_file', dataset_file.file_name)" label="Select a Contrast"/>
                 </repeat>
@@ -34,7 +34,7 @@
         </conditional>
     </inputs>
     <outputs>
-        <data name="contrast_data_subset" format="ctkcontrastdataset" label=""/>
+        <data name="contrast_data_subset" format="cfocontrastdataset" label=""/>
     </outputs>
     <code file="common_functions.py"/>
     <help>

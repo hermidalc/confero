@@ -1,6 +1,4 @@
-<?xml version="1.0"?>
-
-<tool name="Upload R limma object File" id="uploadrlimmaobject" version="0.0.1">
+<tool name="Upload LIMMA/SAM R Object" id="upload_rlimmaobject" version="0.1">
   <description>
     from your computer  
   </description>

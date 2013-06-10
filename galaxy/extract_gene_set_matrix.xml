@@ -1,4 +1,4 @@
-<tool name="Extract Gene Set Matrix" id="confero_platform_extract_gene_set_matrix" version="0.0.1">
+<tool name="Extract Gene Set Matrix" id="confero_platform_extract_gene_set_matrix" version="0.1">
     <description>from multiple gene sets in Confero DB, MSigDB, GeneSigDB</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_gene_set_matrix
@@ -81,28 +81,29 @@
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
                             </option>
                             <option name="MSigDB" value="msigdb">
-                                <option name="C1 (positional gene sets)" value="c1.all"/>
-                                <option name="C2 (curated gene sets)" value="c2.all">
-                                    <option name="CGP (chemical and genetic perturbations)" value="c2.cgp"/>
-                                    <option name="CP (canonical pathways)" value="c2.cp">
-                                        <option name="BIOCARTA (BioCarta gene sets)" value="c2.cp.biocarta"/>
-                                        <option name="KEGG (KEGG gene sets)" value="c2.cp.kegg"/>
-                                        <option name="REACTOME (Reactome gene sets)" value="c2.cp.reactome"/>
+                                <option name="C1 (positional gene sets)" value="msigdb.c1"/>
+                                <option name="C2 (curated gene sets)" value="msigdb.c2">
+                                    <option name="CGP (chemical and genetic perturbations)" value="msigdb.c2.cgp"/>
+                                    <option name="CP (canonical pathways)" value="msigdb.c2.cp">
+                                        <option name="BIOCARTA (BioCarta gene sets)" value="msigdb.c2.cp.biocarta"/>
+                                        <option name="KEGG (KEGG gene sets)" value="msigdb.c2.cp.kegg"/>
+                                        <option name="REACTOME (Reactome gene sets)" value="msigdb.c2.cp.reactome"/>
                                     </option>
                                 </option>
-                                <option name="C3 (motif gene sets)" value="c3.all">
-                                    <option name="MIR (microRNA targets)" value="c3.mir"/>
-                                    <option name="TFT (transcription factor targets)" value="c3.tft"/>
+                                <option name="C3 (motif gene sets)" value="msigdb.c3">
+                                    <option name="MIR (microRNA targets)" value="msigdb.c3.mir"/>
+                                    <option name="TFT (transcription factor targets)" value="msigdb.c3.tft"/>
                                 </option>
-                                <option name="C4 (computational gene sets)" value="c4.all">
-                                    <option name="CGN (cancer gene neighborhoods)" value="c4.cgn"/>
-                                    <option name="CM (cancer modules)" value="c4.cm"/>
+                                <option name="C4 (computational gene sets)" value="msigdb.c4">
+                                    <option name="CGN (cancer gene neighborhoods)" value="msigdb.c4.cgn"/>
+                                    <option name="CM (cancer modules)" value="msigdb.c4.cm"/>
                                 </option>
-                                <option name="C5 (GO gene sets)" value="c5.all">
-                                    <option name="BP (GO biological process)" value="c5.bp"/>
-                                    <option name="CC (GO cellular component)" value="c5.cc"/>
-                                    <option name="MF (GO molecular function)" value="c5.mf"/>
+                                <option name="C5 (GO gene sets)" value="msigdb.c5">
+                                    <option name="BP (GO biological process)" value="msigdb.c5.bp"/>
+                                    <option name="CC (GO cellular component)" value="msigdb.c5.cc"/>
+                                    <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
                                 </option>
+                                <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
                             </option>
                             <option name="GeneSigDB" value="genesigdb"/>
                         </option>
@@ -112,7 +113,7 @@
         </conditional>
     </inputs>
     <outputs>
-        <data format="ctkgenesetmatrix" name="gene_set_matrix" label="Gene Set Matrix"/>
+        <data format="cfogenesetmatrix" name="gene_set_matrix" label="Gene Set Matrix"/>
     </outputs>
     <code file="common_functions.py"/>
     <help>

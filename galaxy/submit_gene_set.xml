@@ -1,4 +1,4 @@
-<tool name="Submit Gene Set" id="confero_platform_submit_gene_set" version="0.0.1">
+<tool name="Submit Gene Set" id="confero_platform_submit_gene_set" version="0.1">
     <description>to the Confero DB</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl $cmd 
@@ -23,14 +23,14 @@
         #end if
     </command>
     <inputs>
-        <param name="gene_set_file" type="data" format="ctkgeneset" label="Gene Set File to Check, Process and Submit"/>
+        <param name="gene_set_file" type="data" format="cfogeneset" label="Gene Set File to Check, Process and Submit"/>
         <param name="id_type" type="select" force_select="false" optional="true" label="Gene Set IDs From" dynamic_options="cfo_get_info('id_types', True)">
-            <help>Select ID type if not already set in data file header</help>
+            <help>OPTIONAL: select ID type if not already set in data file header</help>
         </param>
         <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
-            <help>Select organism if not already set in data file header AND your IDs are gene symbols</help>
+            <help>OPTIONAL: select organism if not already set in data file header AND your IDs are gene symbols</help>
         </param>
-        <!--
+        <!-- Galaxy doesn't yet support dynamic_options controlling conditionals
         <conditional name="id_type_cond">
             <param name="id_type" type="select" force_select="false" optional="true" label="Gene Set IDs From" dynamic_options="cfo_get_info('id_types', True)"/>
             <when value="EntrezGene"/>
@@ -39,9 +39,11 @@
             </when>
         </conditional>
         -->
-        <param name="gene_set_name" type="text" size="100" label="Gene Set Name"/>
+        <param name="gene_set_name" type="text" size="100" label="Gene Set Name">
+            <help>OPTIONAL: specify gene set name if not already set in data file header or you don't want to use file base name as gene set name</help>
+        </param>
         <param name="gene_set_desc" type="text" area="true" size="5x100" label="Gene Set Description">
-            <help>Please do not put manual carriage returns in the text area</help>
+            <help>OPTIONAL: specify dataset description if not already set in data file header.  Please do not put manual carriage returns in the text area</help>
         </param>
         <param name="cmd" type="boolean" truevalue="process_data_file" falsevalue="process_submit_data_file" checked="false">
             <label>Process and Check Gene Set Only</label>
@@ -54,7 +56,7 @@
         <param name="data_type" type="hidden" value="IdList"/>
     </inputs>
     <outputs>
-        <data format="ctkreporthtml" name="report" label="$tool.name on $on_string: $gene_set_file.name"/>
+        <data format="cforeporthtml" name="report" label="$tool.name on $on_string: $gene_set_file.name"/>
     </outputs>
     <code file="common_functions.py"/>
     <help>

@@ -1,4 +1,4 @@
-<tool name="Convert LIMMA/SAM R object" id="confero_platform_generate_idmaps" version="0.0.1">
+<tool name="Convert LIMMA/SAM R Object" id="confero_platform_generate_idmaps" version="0.1">
 	<description>into a contrast dataset idMAPS file</description>
 	<command interpreter="bash">r_wrapper.sh $script_file</command>
 	<inputs>
@@ -58,7 +58,7 @@
 	<code file="get_r_contrasts.py"/>
     <code file="common_functions.py"/>
 	<outputs>
-		<data format="ctkcontrastdataset" name="idmaps_file"
+		<data format="cfocontrastdataset" name="idmaps_file"
 			label="idMAPS file from data ($on_string): ${file_selected.name}" />
 	</outputs>
 	<help>

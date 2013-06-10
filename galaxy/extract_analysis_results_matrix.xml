@@ -1,0 +1,71 @@
+<tool name="Extract Results Matrix" id="confero_platform_extract_analysis_results_matrix" version="0.1">
+    <description>from one or more GSEA or ORA results</description>
+    <command interpreter="perl">
+        ../bin/cfo_run_cmd.pl $cmd
+        #if $results_type_cond.results_type == "GseaPreranked"
+        --gsea-results-dir=$gsea_results_1.extra_files_path
+            #for $r in $results
+        --gsea-results-dir=$r.gsea_results_2.extra_files_path
+            #end for
+        --output-file=$gsea_results_matrix
+        --columns="$gsea_columns"
+        #else if $results_type_cond.results_type == "HyperGeoTest"
+        --ora-results-file=$ora_results_1
+            #for $r in $results
+        --ora-results-file=$r.ora_results_2
+            #end for
+        --output-file=$ora_results_matrix
+        #end if
+    </command>
+    <inputs>
+        <conditional name="results_type_cond">
+            <param name="results_type" type="select" force_select="true" optional="false" label="Results Type">
+                <option value="GseaPreranked" selected="true">GSEA Preranked</option>
+                <option value="HyperGeoTest">ORA (Hypergeometric Test)</option>
+                <!--
+                <option value="GseaSimple">GSEA Simple</option>
+                <option value="RunningFishers">Running Fisher's Exact Test</option>
+                -->
+            </param>
+            <!--
+            <when value="GseaSimple"/>
+            <when value="RunningFishers"/>
+            -->
+            <when value="GseaPreranked">
+                <param name="gsea_results_1" type="data" format="cfogsearesultshtml" label="GSEA Results"/>
+                <repeat name="results" title="GSEA Results">
+                    <param name="gsea_results_2" type="data" format="cfogsearesultshtml" label="GSEA Results"/>
+                </repeat>
+                <param name="gsea_columns" type="select" multiple="true" force_select="true" display="checkboxes" label="GSEA Columns to Output">
+                    <option value="SIZE">SIZE</option>
+                    <option value="ES">ES</option>
+                    <option value="NES" selected="true">NES</option>
+                    <option value="NOM p-val">NOM p-val</option>
+                    <option value="FDR q-val" selected="true">FDR q-val</option>
+                    <option value="FWER p-val">FWER p-val</option>
+                    <option value="RANK AT MAX" selected="true">RANK AT MAX</option>
+                    <option value="LEADING EDGE">LEADING EDGE</option>
+                </param>
+                <param name="cmd" type="hidden" value="extract_gsea_results_matrix"/>
+            </when>
+            <when value="HyperGeoTest">
+                <param name="ora_results_1" type="data" format="cfohypergresultshtml" label="ORA Results"/>
+                <repeat name="results" title="ORA Results">
+                    <param name="ora_results_2" type="data" format="cfohypergresultshtml" label="ORA Results"/>
+                </repeat>
+                <param name="cmd" type="hidden" value="extract_ora_results_matrix"/>
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data format="cfogsearesultsmatrix" name="gsea_results_matrix">
+            <filter>results_type_cond['results_type'] == "GseaPreranked"</filter>
+        </data>
+        <data format="cfohypergresultsmatrix" name="ora_results_matrix">
+            <filter>results_type_cond['results_type'] == "HyperGeoTest"</filter>
+        </data>
+    </outputs>
+    <help>
+Extract analysis results matrix from one or more GSEA or ORA results
+    </help>
+</tool>

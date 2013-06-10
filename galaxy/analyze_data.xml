@@ -1,19 +1,28 @@
-<tool name="Analyze Data" id="confero_platform_analyze_data" version="0.0.1">
+<tool name="Analyze Data" id="confero_platform_analyze_data" version="0.1">
     <description>for gene set enrichment using Confero DB, MSigDB, GeneSigDB collections</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl analyze_data 
-        --input-file=$ranked_list 
-        --orig-filename="$ranked_list.name"
-        #if $id_type.value != "?"
-        --id-type="$id_type"
-            #if $id_type.value == "GeneSymbol" and $organism.value != "?"
-        --organism="$organism"
+        #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
+        --input-file=$analysis_alg_cond.ranked_list 
+        --orig-filename="$analysis_alg_cond.ranked_list.name"
+        #else if $analysis_alg_cond.analysis_alg == "HyperGeoTest"
+        --input-file=$analysis_alg_cond.deg_list
+        --orig-filename="$analysis_alg_cond.deg_list.name"
+         #end if
+        --data-type="$data_type"
+        #if $analysis_alg_cond.id_type.value != "?"
+        --id-type="$analysis_alg_cond.id_type"
+            #if $analysis_alg_cond.id_type.value == "GeneSymbol" and $analysis_alg_cond.organism.value != "?"
+        --organism="$analysis_alg_cond.organism"
             #end if
         #end if
-        --report-file=$analysis_results
-        --data-type="$data_type"
-        --report-output-dir=$analysis_results.extra_files_path 
         --analysis-algorithm="$analysis_alg_cond.analysis_alg"
+        #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
+        --report-file=$gsea_analysis_results
+        --report-output-dir=$gsea_analysis_results.extra_files_path
+        #else if $analysis_alg_cond.analysis_alg == "HyperGeoTest"
+        --report-file=$hyperg_analysis_results
+        #end if
         #if $analysis_alg_cond.analysis_alg == "GseaPreranked"
         --scoring-scheme="$analysis_alg_cond.scoring_scheme"
         #end if
@@ -40,32 +49,34 @@
         #end if
     </command>
     <inputs>
-        <param name="ranked_list" type="data" format="ctkrnk" label="Input Ranked List to Analyze">
-            <help>
-            The input file should be a ranked list in the following format: 
-            a two-column tab-delimited file where the first column are your IDs and 
-            the second column are your ranks (which are typically the statistic metric
-            t-test (S) or log2 fold change (M)). You do not need a column header.
-            </help>
-        </param>
-        <param name="id_type" type="select" force_select="false" optional="true" label="Query IDs From" dynamic_options="cfo_get_info('id_types', True)">
-            <help>Select ID type if not already set in file header</help>
-        </param>
-        <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
-            <help>Select organism if not already set in file header AND your IDs are gene symbols</help>
-        </param>
         <conditional name="analysis_alg_cond">
             <param name="analysis_alg" type="select" force_select="true" optional="false" label="Analysis Algorithm">
                 <option value="GseaPreranked" selected="true">GSEA Preranked</option>
+                <option value="HyperGeoTest">ORA (Hypergeometric Test)</option>
                 <!--
                 <option value="GseaSimple">GSEA Simple</option>
                 <option value="RunningFishers">Running Fisher's Exact Test</option>
                 -->
             </param>
             <!--
+            <when value="GseaSimple"/>
             <when value="RunningFishers"/>
             -->
             <when value="GseaPreranked">
+                <param name="ranked_list" type="data" format="cfornklist" label="Input Ranked List to Analyze">
+                    <help>
+                    The input file should be a ranked list in the following format: 
+                    a two-column tab-delimited file where the first column are your IDs and 
+                    the second column are your ranks (which are typically the statistic metric
+                    t-test (S) or log2 fold change (M)). You do not need a column header.
+                    </help>
+                </param>
+                <param name="id_type" type="select" force_select="false" optional="true" label="List IDs From" dynamic_options="cfo_get_info('id_types', True)">
+                    <help>OPTIONAL: select ID type if not already set in file header</help>
+                </param>
+                <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+                    <help>OPTIONAL: select organism if not already set in file header AND your IDs are gene symbols</help>
+                </param>
                 <param name="scoring_scheme" type="select" force_select="true" optional="false" label="Scoring Scheme">
                     <option value="weighted" selected="true">weighted</option>
                     <option value="weighted_p2">weighted_p2</option>
@@ -80,28 +91,29 @@
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
                             </option>
                             <option name="MSigDB" value="msigdb">
-                                <option name="C1 (positional gene sets)" value="c1.all"/>
-                                <option name="C2 (curated gene sets)" value="c2.all">
-                                    <option name="CGP (chemical and genetic perturbations)" value="c2.cgp"/>
-                                    <option name="CP (canonical pathways)" value="c2.cp">
-                                        <option name="BIOCARTA (BioCarta gene sets)" value="c2.cp.biocarta"/>
-                                        <option name="KEGG (KEGG gene sets)" value="c2.cp.kegg"/>
-                                        <option name="REACTOME (Reactome gene sets)" value="c2.cp.reactome"/>
+                                <option name="C1 (positional gene sets)" value="msigdb.c1"/>
+                                <option name="C2 (curated gene sets)" value="msigdb.c2">
+                                    <option name="CGP (chemical and genetic perturbations)" value="msigdb.c2.cgp"/>
+                                    <option name="CP (canonical pathways)" value="msigdb.c2.cp">
+                                        <option name="BIOCARTA (BioCarta gene sets)" value="msigdb.c2.cp.biocarta"/>
+                                        <option name="KEGG (KEGG gene sets)" value="msigdb.c2.cp.kegg"/>
+                                        <option name="REACTOME (Reactome gene sets)" value="msigdb.c2.cp.reactome"/>
                                     </option>
                                 </option>
-                                <option name="C3 (motif gene sets)" value="c3.all">
-                                    <option name="MIR (microRNA targets)" value="c3.mir"/>
-                                    <option name="TFT (transcription factor targets)" value="c3.tft"/>
+                                <option name="C3 (motif gene sets)" value="msigdb.c3">
+                                    <option name="MIR (microRNA targets)" value="msigdb.c3.mir"/>
+                                    <option name="TFT (transcription factor targets)" value="msigdb.c3.tft"/>
                                 </option>
-                                <option name="C4 (computational gene sets)" value="c4.all">
-                                    <option name="CGN (cancer gene neighborhoods)" value="c4.cgn"/>
-                                    <option name="CM (cancer modules)" value="c4.cm"/>
+                                <option name="C4 (computational gene sets)" value="msigdb.c4">
+                                    <option name="CGN (cancer gene neighborhoods)" value="msigdb.c4.cgn"/>
+                                    <option name="CM (cancer modules)" value="msigdb.c4.cm"/>
                                 </option>
-                                <option name="C5 (GO gene sets)" value="c5.all">
-                                    <option name="BP (GO biological process)" value="c5.bp"/>
-                                    <option name="CC (GO cellular component)" value="c5.cc"/>
-                                    <option name="MF (GO molecular function)" value="c5.mf"/>
+                                <option name="C5 (GO gene sets)" value="msigdb.c5">
+                                    <option name="BP (GO biological process)" value="msigdb.c5.bp"/>
+                                    <option name="CC (GO cellular component)" value="msigdb.c5.cc"/>
+                                    <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
                                 </option>
+                                <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
                             </option>
                             <option name="GeneSigDB" value="genesigdb"/>
                         </option>
@@ -118,14 +130,70 @@
                     <option value="DN">DN</option>
                 </param>
             </when>
+            <when value="HyperGeoTest">
+                <param name="deg_list" type="data" format="cfodeglist" label="Input DEG List to Analyze">
+                    <help>
+                    The input file should be a DEG list in the following format: 
+                    a two-column tab-delimited file where the first column are your IDs and 
+                    the second column are the significance levels (P). You do not need a column header.
+                    </help>
+                </param>
+                <param name="id_type" type="select" force_select="false" optional="true" label="List IDs From" dynamic_options="cfo_get_info('id_types', True)">
+                    <help>OPTIONAL: select ID type if not already set in file header</help>
+                </param>
+                <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
+                    <help>OPTIONAL: select organism if not already set in file header AND your IDs are gene symbols</help>
+                </param>
+                <param name="p_val_cutoff" type="float" value="0.05" optional="true" label="P Value Cutoff"/>
+                <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
+                    <options>
+                        <option name="All" value="msigdb,genesigdb">
+                            <option name="MSigDB" value="msigdb">
+                                <option name="C1 (positional gene sets)" value="msigdb.c1"/>
+                                <option name="C2 (curated gene sets)" value="msigdb.c2">
+                                    <option name="CGP (chemical and genetic perturbations)" value="msigdb.c2.cgp"/>
+                                    <option name="CP (canonical pathways)" value="msigdb.c2.cp">
+                                        <option name="BIOCARTA (BioCarta gene sets)" value="msigdb.c2.cp.biocarta"/>
+                                        <option name="KEGG (KEGG gene sets)" value="msigdb.c2.cp.kegg"/>
+                                        <option name="REACTOME (Reactome gene sets)" value="msigdb.c2.cp.reactome"/>
+                                    </option>
+                                </option>
+                                <option name="C3 (motif gene sets)" value="msigdb.c3">
+                                    <option name="MIR (microRNA targets)" value="msigdb.c3.mir"/>
+                                    <option name="TFT (transcription factor targets)" value="msigdb.c3.tft"/>
+                                </option>
+                                <option name="C4 (computational gene sets)" value="msigdb.c4">
+                                    <option name="CGN (cancer gene neighborhoods)" value="msigdb.c4.cgn"/>
+                                    <option name="CM (cancer modules)" value="msigdb.c4.cm"/>
+                                </option>
+                                <option name="C5 (GO gene sets)" value="msigdb.c5">
+                                    <option name="BP (GO biological process)" value="msigdb.c5.bp"/>
+                                    <option name="CC (GO cellular component)" value="msigdb.c5.cc"/>
+                                    <option name="MF (GO molecular function)" value="msigdb.c5.mf"/>
+                                </option>
+                                <option name="C6 (oncogenic signatures)" value="msigdb.c6"/>
+                            </option>
+                            <option name="GeneSigDB" value="genesigdb"/>
+                        </option>
+                    </options>
+                </param>
+            </when>
         </conditional>
         <param name="data_type" type="hidden" value="RankedList"/>
     </inputs>
     <outputs>
-        <!-- broken value_label 
-        <data format="ctkgsearesultshtml" name="analysis_results" label="$analysis_alg_cond.analysis_alg.value_label Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $ranked_list.name"/>
+        <!-- Galaxy has broken value_label 
+        <data format="cfogsearesultshtml" name="gsea_analysis_results" label="$analysis_alg_cond.analysis_alg.value_label Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $analysis_alg_cond.ranked_list.name"/>
         -->
-        <data format="ctkgsearesultshtml" name="analysis_results" label="GSEA Preranked Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $ranked_list.name"/>
+        <data format="cfogsearesultshtml" name="gsea_analysis_results" label="GSEA Preranked Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $analysis_alg_cond.ranked_list.name">
+            <filter>analysis_alg_cond['analysis_alg'] == "GseaPreranked"</filter>
+        </data>
+        <!-- Galaxy has broken value_label 
+        <data format="cfohypergresultshtml" name="hyperg_analysis_results" label="$analysis_alg_cond.analysis_alg.value_label Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $analysis_alg_cond.deg_list.name"/>
+        -->
+        <data format="cfohypergresultshtml" name="hyperg_analysis_results" label="ORA Hypergeometric Analysis $analysis_alg_cond.gene_set_dbs on $on_string: $analysis_alg_cond.deg_list.name">
+           <filter>analysis_alg_cond['analysis_alg'] == "HyperGeoTest"</filter>
+        </data>
     </outputs>
     <code file="common_functions.py"/>
     <help>
