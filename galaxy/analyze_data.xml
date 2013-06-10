@@ -82,7 +82,7 @@
                 <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
                     <options>
                         <option name="All (Confero, MSigDB, GeneSigDB)" value="cfodb,msigdb,genesigdb">
-                            <option name="Confero Gene Set DB" value="conferodb">
+                            <option name="Confero Gene Set DB" value="cfodb">
                                 <option name="Contrast gene sets" value="cfodb.contrasts"/>
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
                             </option>
