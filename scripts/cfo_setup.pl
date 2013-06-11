@@ -184,6 +184,7 @@ cfo_setup.pl - Confero System Setup
  Options:
      --no-interactive          Run in non-interactive mode (default false)
      --no-db                   Skip database (re)creation step (default false)
+     --no-download             Skip download of data files and uses existing local files (default false)
      --debug                   Enable debug mode (default off)
      --verbose                 Be verbose (default off)
      --help                    Display usage and exit
