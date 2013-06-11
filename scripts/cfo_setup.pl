@@ -118,8 +118,11 @@ if (!$no_db) {
     }
     # deploy schema
     my $ctk_db = Confero::DB->new();
-    print "Deploying schema\n\n";
-    my $mysql_sqlt_args = { show_warnings => 1, producer_args => { mysql_version =>  $ctk_db->storage->dbh->selectrow_array('SELECT VERSION()') } };
+    print "Deploying schema\n";
+    my $mysql_server_version_str = $ctk_db->storage->dbh->selectrow_array('SELECT VERSION()');
+    my ($mysql_server_version) = split /-/, $mysql_server_version_str;
+    print "MySQL server version $mysql_server_version\n\n";
+    my $mysql_sqlt_args = { show_warnings => 1, producer_args => { mysql_version =>  $mysql_server_version } };
     my @deploy_stmts = $ctk_db->deployment_statements(undef, undef, undef, $mysql_sqlt_args);
     print "$deploy_stmts[0]", join(";\n", @deploy_stmts[1 .. $#deploy_stmts - 1]), ";\n--\n--\n$deploy_stmts[$#deploy_stmts];\n--\n--\n\n" if $verbose or $debug;
     # DBIx::Class schema deploy unfortunately doesn't return true/false on success/failure
