@@ -1145,7 +1145,7 @@ eval {
                 }
                 else {
                     print "Skipping reprocessing of Confero DB data, doing incremental database update\n";
-                    die "\nIncremental update feature implemented yet\n";
+                    die "\nIncremental update feature not implemented yet\n";
                 }
                 ## delete only those genes (and link to gene sets) which don't exist in Entrez Gene anymore
                 ## update genes (and link to gene sets) which are discontinued but have a current equivalent
