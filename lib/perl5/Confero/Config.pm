@@ -5,6 +5,8 @@ use warnings;
 use Const::Fast;
 use Confero::LocalConfig qw(
     $CTK_BASE_DIR
+    $CTK_DATA_FILE_MIN_GENE_SET_SIZE
+    $CTK_DATA_FILE_MAX_GENE_SET_SIZE
     $CTK_AFFY_ANNOT_NETAFFX_VERSION
 );
 require Exporter;
@@ -40,6 +42,9 @@ our @EXPORT_OK = qw(
     $CTK_GSEA_REPORT_FILE_NAME_REGEXP
     $CTK_GSEA_DETAILS_FILE_NAME_REGEXP
     %CTK_GSEA_RESULTS_COLUMN_NAMES
+    $CTK_GSEA_GENE_SET_MIN
+    $CTK_GSEA_GENE_SET_MAX
+    $CTK_GSEA_PLOT_TOP_X
     $CTK_WEB_EXTRACT_ROWS_PER_PAGE
     $CTK_GALAXY_ANNOT_NV_SEPARATOR
 );
@@ -89,6 +94,9 @@ our %EXPORT_TAGS = (
         $CTK_GSEA_REPORT_FILE_NAME_REGEXP
         $CTK_GSEA_DETAILS_FILE_NAME_REGEXP
         %CTK_GSEA_RESULTS_COLUMN_NAMES
+        $CTK_GSEA_GENE_SET_MIN
+        $CTK_GSEA_GENE_SET_MAX
+        $CTK_GSEA_PLOT_TOP_X
     )],
     web => [qw(
         $CTK_WEB_EXTRACT_ROWS_PER_PAGE
@@ -507,6 +515,10 @@ const our %CTK_GSEA_RESULTS_COLUMN_NAMES             => map { uc($_) => 1 } (
     'RANK AT MAX',
     'LEADING EDGE',
 );
+const our $CTK_GSEA_GENE_SET_MIN                     => $CTK_DATA_FILE_MIN_GENE_SET_SIZE;
+const our $CTK_GSEA_GENE_SET_MAX                     => $CTK_DATA_FILE_MAX_GENE_SET_SIZE;
+# remember that limiting this also limits how many gene sets can be in leading edge matrix, etc since need detail report for computing these
+const our $CTK_GSEA_PLOT_TOP_X                       => 1000;
 # Confero Web
 const our $CTK_WEB_EXTRACT_ROWS_PER_PAGE             => 2000;
 # Galaxy

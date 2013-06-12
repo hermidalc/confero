@@ -36,9 +36,6 @@ our @EXPORT_OK = qw(
     $CTK_GSEA_NUM_PERMUTATIONS
     $CTK_GSEA_MAX_JAVA_HEAP_SIZE
     $CTK_GSEA_DEFAULT_SCORING_SCHEME
-    $CTK_GSEA_GENE_SET_MIN
-    $CTK_GSEA_GENE_SET_MAX
-    $CTK_GSEA_PLOT_TOP_X
     $CTK_WEB_SERVER_HOST
     $CTK_WEB_SERVER_PORT
     $CTK_DISPLAY_ID_SPACER
@@ -85,9 +82,6 @@ our %EXPORT_TAGS = (
         $CTK_GSEA_NUM_PERMUTATIONS
         $CTK_GSEA_MAX_JAVA_HEAP_SIZE
         $CTK_GSEA_DEFAULT_SCORING_SCHEME
-        $CTK_GSEA_GENE_SET_MIN
-        $CTK_GSEA_GENE_SET_MAX
-        $CTK_GSEA_PLOT_TOP_X
     )],
     web => [qw(
         $CTK_WEB_SERVER_HOST
@@ -145,10 +139,6 @@ const our $CTK_GSEA_JAVA_PATH                        => 'java';
 const our $CTK_GSEA_NUM_PERMUTATIONS                 => 1500;
 const our $CTK_GSEA_MAX_JAVA_HEAP_SIZE               => '1024m';
 const our $CTK_GSEA_DEFAULT_SCORING_SCHEME           => 'weighted';
-const our $CTK_GSEA_GENE_SET_MIN                     => $CTK_DATA_FILE_MIN_GENE_SET_SIZE;
-const our $CTK_GSEA_GENE_SET_MAX                     => $CTK_DATA_FILE_MAX_GENE_SET_SIZE;
-# remember that limiting this also limits how many gene sets can be in leading edge matrix, etc since need detail report for computing these
-const our $CTK_GSEA_PLOT_TOP_X                       => 1000;
 
 # Confero Web
 const our $CTK_WEB_SERVER_HOST                       => 'your_confero_app_server_hostname';
