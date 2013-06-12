@@ -148,7 +148,7 @@ print "[Programs]\n",
 my $cmd_opts = '';
 $cmd_opts .= ' --no-interactive' if $no_interactive;
 $cmd_opts .= $no_download 
-           ? ' --no-entrez-download'
+           ? ' --no-interactive --no-entrez-download'
            : ' --download-netaffx --download-agilent --download-geo --download-illumina';
 $cmd_opts .= ' --debug' if $debug;
 $cmd_opts .= ' --verbose' if $verbose;
