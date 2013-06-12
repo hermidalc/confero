@@ -10,7 +10,7 @@ use File::Copy::Recursive qw(dirmove);
 use File::Path qw(mkpath rmtree);
 use File::Temp ();  # () for OO-interface
 use File::Spec;
-use Confero::Config qw(:data :gsea %CTK_ENTREZ_GENE_ORGANISM_DATA $CTK_GALAXY_ANNOT_NV_SEPARATOR);
+use Confero::Config qw(:data :gsea :galaxy %CTK_ENTREZ_GENE_ORGANISM_DATA);
 use Confero::LocalConfig qw(:general :data :gsea :web);
 use Confero::DataFile;
 use Confero::DB;
