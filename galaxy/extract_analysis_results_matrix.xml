@@ -1,17 +1,17 @@
 <tool name="Extract Results Matrix" id="confero_platform_extract_analysis_results_matrix" version="0.1">
     <description>from one or more related GSEA or ORA results</description>
     <command interpreter="perl">
-        ../bin/cfo_run_cmd.pl $cmd
+        ../bin/cfo_run_cmd.pl $results_type_cond.cmd
         #if $results_type_cond.results_type == "GseaPreranked"
-        --gsea-results-dir=$gsea_results_1.extra_files_path
-            #for $r in $results
+        --gsea-results-dir=$results_type_cond.gsea_results_1.extra_files_path
+            #for $r in $results_type_cond.results
         --gsea-results-dir=$r.gsea_results_2.extra_files_path
             #end for
         --output-file=$gsea_results_matrix
-        --columns="$gsea_columns"
+        --columns="$results_type_cond.gsea_columns"
         #else if $results_type_cond.results_type == "HyperGeoTest"
-        --ora-results-file=$ora_results_1
-            #for $r in $results
+        --ora-results-file=$results_type_cond.ora_results_1
+            #for $r in $results_type_cond.results
         --ora-results-file=$r.ora_results_2
             #end for
         --output-file=$ora_results_matrix
