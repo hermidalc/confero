@@ -977,12 +977,12 @@ sub write_subset_file {
         my ($field_name) = $metadata_str =~ /^#%\s*(\w+)(?:=.+)*$/;
         # rewrite only multi metadata headers
         if (ref($self->metadata->{$field_name}) eq 'ARRAY') {
-            my $field_is_numeric = ($CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int} or 
-                                    $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num} or
-                                    $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint} or
-                                    $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum})
-                                 ? 1
-                                 : 0;
+            my $field_is_numeric = (
+                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int}) or 
+                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num}) or
+                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint}) or
+                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum})
+            ) ? 1 : 0;
             $metadata_str = "#%$field_name=" . ($field_is_numeric ? '' : '"') . join($field_is_numeric ? ',' : '","', 
                 map {
                     $self->metadata->{$field_name}->[$_] 
