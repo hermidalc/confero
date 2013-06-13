@@ -158,10 +158,12 @@ sub _load_data_from_file {
                               $field_name eq 'data_set_desc' ? 'dataset_desc'   : 
                               $field_name eq 'contrast_name' ? 'contrast_names' : $field_name;
                 my $metadata_split_regexp = (
-                    (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int}) or 
-                    (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num}) or
-                    (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint}) or
-                    (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum})
+                    exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and (
+                        exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int} or 
+                        exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num} or
+                        exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint} or
+                        exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum}
+                    )
                 ) ? qr/,/ 
                   : qr/(?:"|'),(?:"|')/;
                 # make boolean field values
@@ -978,11 +980,14 @@ sub write_subset_file {
         # rewrite only multi metadata headers
         if (ref($self->metadata->{$field_name}) eq 'ARRAY') {
             my $field_is_numeric = (
-                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int}) or 
-                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num}) or
-                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint}) or
-                (exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum})
-            ) ? 1 : 0;
+                exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name} and (
+                    exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_int} or 
+                    exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_num} or
+                    exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_uint} or
+                    exists $CTK_DATA_FILE_METADATA_FIELDS{$field_name}{is_unum}
+                )
+            ) ? 1 
+              : 0;
             $metadata_str = "#%$field_name=" . ($field_is_numeric ? '' : '"') . join($field_is_numeric ? ',' : '","', 
                 map {
                     $self->metadata->{$field_name}->[$_] 
