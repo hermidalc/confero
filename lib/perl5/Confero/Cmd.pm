@@ -1234,7 +1234,7 @@ sub analyze_data {
                         }
                         # MSigDB, GeneSigDB
                         else {
-                            confess("Gene Set DB '$gene_set_db' not valid!") unless defined $CTK_GSEA_GSDBS{$gene_set_db};
+                            confess("Gene Set DB '$gene_set_db' not valid!") unless exists $CTK_GSEA_GSDBS{$gene_set_db} and defined $CTK_GSEA_GSDBS{$gene_set_db};
                             # change up for AR-only MSigDB analysis
                             $gene_set_db = "$1.ar" if $do_ar_analysis and $gene_set_db =~ /^(msigdb\.c2\.(?:|all|cgp))/i;
                             confess("Gene Set DB '$gene_set_db' file missing!") unless -f  "$CTK_GSEA_GENE_SET_DB_DIR/$CTK_GSEA_GSDBS{$gene_set_db}";
@@ -2037,7 +2037,7 @@ sub extract_gene_set_matrix {
                     }
                     # MSigDB, GeneSigDB
                     else {
-                        confess("Gene Set DB '$gene_set_db' not valid!") unless defined $CTK_GSEA_GSDBS{$gene_set_db};
+                        confess("Gene Set DB '$gene_set_db' not valid!") unless exists $CTK_GSEA_GSDBS{$gene_set_db} and defined $CTK_GSEA_GSDBS{$gene_set_db};
                         push @gene_set_db_file_paths, "$CTK_GSEA_GENE_SET_DB_DIR/$CTK_GSEA_GSDBS{$gene_set_db}";
                     }
                 }
