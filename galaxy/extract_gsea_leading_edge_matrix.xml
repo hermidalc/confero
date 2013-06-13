@@ -27,7 +27,7 @@
         <param name="include_annots" type="boolean" value="false" optional="true" label="Include Gene Annotations" />
     </inputs>
     <outputs>
-        <data format="cfogenesetmatrix" name="gsea_leading_edge_matrix" label="Leading Edge Matrix ($enrichment_type.value_label) for $on_string: $gsea_search_results.name"/>
+        <data format="cfogenesetmatrix" name="gsea_leading_edge_matrix" label="Leading Edge Matrix ($enrichment_type.value_label) for $on_string: $gsea_results.name"/>
     </outputs>
     <help>
 Extract leading edge matrix from a GSEA result.
