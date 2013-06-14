@@ -62,83 +62,92 @@
     <help>
 This tool will::
 
-1. Check, process, map and collapse a source ID list file into an Entrez Gene ID-based gene set list using 
-latest source platform annnotations and NCBI Entrez Gene database.
+  1. Check, process, map and collapse a source ID list file into an 
+     Entrez Gene ID-based gene set list using latest source platform 
+     annnotations and NCBI Entrez Gene database.
 
-2. Submit ID list, gene set and all metadata into the Confero DB.
+  2. Submit ID list, gene set and all metadata into the Confero DB.
 
 The tool provides a summary report of the procedure as output.
 
-If you do not have file to choose from in the Gene Set File drop-down menu, it's because you have no files 
-of this format in your Galaxy history.  You first need to do either one of the following::
+If you do not have file to choose from in the Gene Set File 
+drop-down menu, it's because you have no files of this format in 
+your Galaxy history.  You first need to do the following::
 
-  - Go to Get Data --> Upload File, select File Format: **cfogenedataset**, browse for and upload your ID
-  list file.
+  * Go to Get Data --> Upload File, select File Format 
+    cfogenedataset, browse for and upload your ID list file.
 
 IMPORTANT INFORMATION::
 
-* All header metadata fields begin with a #% and have an = after the field name and before the field data. 
-Field data with spaces must be quoted " ". All header metadata fields must be at the top of the file, before 
-any data. Here is an example:
-
+  * All header metadata fields begin with a #% and have an = after 
+    the field name and before the field data. Field data with spaces 
+    must be quoted " ". All header metadata fields must be at the 
+    top of the file, before any data. Here is an example:
+  
     #%gene_set_name="Inflammatory Response"
-    #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by 
-chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into 
-intercellular spaces and accumulation of white blood cells and macrophages."
-   #%id_type=GeneSymbol
-   #%organism="Homo sapiens"
+    #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into intercellular spaces and accumulation of white blood cells and macrophages."
+    #%id_type=GeneSymbol
+    #%organism="Homo sapiens"
 
-* Various header metadata fields in your contrast file are supported. These currently are::
+  * Various header metadata fields in your contrast file are 
+    supported. These currently are::
 
-  - gene_set_name
-  - gene_set_desc
-  - id_type
-  - organism (specify only gene symbols are your IDs (#%id_type=GeneSymbol) Confero will automatically 
-determine organism for all other ID types)
-  - gs_is_ranked (specify if gene set list is ordered by rank so that rank order will be saved in Confero DB)
+    - gene_set_name
+    - gene_set_desc
+    - id_type
+    - organism (specify only gene symbols are your IDs 
+      (#%id_type=GeneSymbol) Confero will automatically 
+      determine organism for all other ID types)
+    - gs_is_ranked (specify if gene set list is ordered by rank 
+      so that rank order will be saved in Confero DB)
 
-* Various additional annotation metadata fields are supported.  These currently are::
+  * Various additional annotation metadata fields are supported. 
+    These currently are::
 
-  - system
-  - study_no
-  - cell_tissue
-  - stimulus
+    - system
+    - study_no
+    - cell_tissue
+    - stimulus
 
-* Metadata headers must be at the top file, before any data column header or data.  They should have the following 
-format shown in the example below::
+  * Metadata headers must be at the top file, before any data column 
+    header or data.  They should have the following format shown in 
+    the example below::
 
-   #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by 
-chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into 
-intercellular spaces and accumulation of white blood cells and macrophages."
-   #%id_type=GeneSymbol
-   #%organism="Homo sapiens"
+    #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into intercellular spaces and accumulation of white blood cells and macrophages."
+    #%id_type=GeneSymbol
+    #%organism="Homo sapiens"
 
-* If the metadata header gene_set_name is not included, the basename of the file will be used for the gene set name.
+  * If the metadata header gene_set_name is not included, the basename 
+    of the file will be used for the gene set name.
 
-* Gene set file format example, e.g. Inflammatory_Response.txt::
+  * If you already have certain metadata fields in your file header 
+    then you should ignore the OPTIONAL web form menus to specify 
+    these fields.
 
-   #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by 
-chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into 
-intercellular spaces and accumulation of white blood cells and macrophages."
-   #%id_type=GeneSymbol
-   #%organism="Homo sapiens"
-   ABCF1
-   ADORA1
-   ADORA2A
-   ADORA3
-   AFAP1L2
-   AGER
-   AHSG
-   AIF1
-   ALOX15
-   ALOX5AP
-   ANXA1
-   AOAH
-   AOC3
-   AOX1
-   APCS
-   APOL3
-   BLNK
-   ...
+  * ID list format example, e.g. Inflammatory_Response.txt with gene 
+    symbols as IDs (though IDs can be from any supported source 
+    platform)::
+
+    #%gene_set_desc="The immediate defensive reaction (by vertebrate tissue) to infection or injury caused by chemical or physical agents. The process is characterized by local vasodilation, extravasation of plasma into intercellular spaces and accumulation of white blood cells and macrophages."
+    #%id_type=GeneSymbol
+    #%organism="Homo sapiens"
+    ABCF1
+    ADORA1
+    ADORA2A
+    ADORA3
+    AFAP1L2
+    AGER
+    AHSG
+    AIF1
+    ALOX15
+    ALOX5AP
+    ANXA1
+    AOAH
+    AOC3
+    AOX1
+    APCS
+    APOL3
+    BLNK
+    ...
     </help>
 </tool>

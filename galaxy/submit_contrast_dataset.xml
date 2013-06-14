@@ -80,81 +80,103 @@
     <help>
 This tool will::
 
-1. Check, process, map and collapse a source contrast dataset (idMAPSMAPSMAPS...) into an 
-Entrez Gene ID-based contrast dataset using the latest source platform annnotations and NCBI Entrez Gene 
-database.
+  1. Check, process, map and collapse a source contrast dataset 
+     (idMAPSMAPSMAPS...) into an Entrez Gene ID-based contrast 
+     dataset using the latest source platform annnotations and 
+     NCBI Entrez Gene database.
 
-2. Extracts gene sets from each contrast using parameters provided in the data file header or using 
-Confero system defaults.
+  2. Extracts gene sets from each contrast using parameters 
+     provided in the data file header or using Confero system 
+     defaults.
 
-3. Submit dataset, contrasts, gene sets and all metadata into the Confero DB.
+  3. Submit dataset, contrasts, gene sets and all metadata into 
+     the Confero DB.
 
-The tool provides a summary report of the procedure as output. 
+The tool provides a summary report of the procedure as output.
 
-If you do not have file to choose from in the Contrast Dataset File drop-down menu, it's because you have no files 
-of this format in your Galaxy history.  You first need to do either one of the following::
+If you do not have file to choose from in the Contrast Dataset 
+File drop-down menu, it's because you have no files of this format 
+in your Galaxy history.  You first need to do either one of the 
+following::
 
-  - Go to Get Data --> Upload File, select File Format: **cfocontrastdataset**, browse for and upload your idMAPS
-  file.
-  - Go to Upload LIMMA/SAM R Object, browse for and upload your limma/samr object file, then go to
-  Convert LIMMA/SAM R Object and convert the object into an idMAPS file and adding the request header fields.
+  * Go to Get Data --> Upload File, select File Format 
+    cfocontrastdataset, browse for and upload your idMAPS file.
+    
+    OR
+    
+  * Go to Upload LIMMA/SAM R Object, browse for and upload your 
+    limma/samr object file, then go to Convert LIMMA/SAM R Object 
+    and convert the object into an idMAPS file and adding the 
+    request header fields.
 
 IMPORTANT INFORMATION::
 
-* All the contrasts in a file form a contrast dataset. Each individual contrast in the dataset is typically 
-a experimental condition pairwise comparison or a linear model contrast matrix coefficient.
+  * All the contrasts in a file form a contrast dataset. Each 
+    individual contrast in the dataset is typically a experimental 
+    condition pairwise comparison or a linear model contrast 
+    matrix coefficient.
 
-* The contrast dataset file can already be Entrez Gene ID-based, in this case the tool will check, 
-process and update the IDs in your file using the latest NCBI Entrez Gene database.
+  * The contrast dataset file can already be Entrez Gene ID-based, 
+    in this case the tool will check, process and update the IDs 
+    in your file using the latest NCBI Entrez Gene database.
 
-* The contrast dataset file can exclude any or all of the M, P or S column(s) (idA, idAAA, idAMAMAM, 
-idMAPMAPMAP) though it is highly recommended you have these.
+  * The contrast dataset file can exclude any or all of the M, P 
+    or S column(s) (idA, idAAA, idAMAMAM, idMAPMAPMAP) though it 
+    is highly recommended you have M, P and S.
 
-* The contrast dataset file requires a data column header unless there is only one contrast in the dataset.
+  * The contrast dataset file requires a data column header unless 
+    there is only one contrast in the dataset.
 
-* All header metadata fields begin with a #% and have an = after the field name and before the field data. 
-Field data with spaces must be quoted " ". Fields which accept multiple inputs need to be separated with
-a comma.  All header metadata fields must be at the top of the file, before any column header or data. 
-Here is an example of a 4 contrast dataset::
+  * All header metadata fields begin with a #% and have an = after 
+    the field name and before the field data. Field data with spaces 
+    must be quoted " ". Fields which accept multiple inputs need to 
+    be separated with a comma.  All header metadata fields must be 
+    at the top of the file, before any column header or data. Here 
+    is an example of a four contrast dataset::
 
-  #%dataset_name="Adjuvant Tamoxifen Therapy"
-  #%dataset_desc="The 76-gene signature defines high-risk patients that benefit from adjuvant tamoxifen therapy"
-  #%id_type=HG-U133_Plus_2
-  #%contrast_names="GSM305129","GSM305130","GSM305131","GSM305132"
-  ID    A   M   P   S   A   M   P   S   A   M   P   S    A   M   P   S
+    #%dataset_name="Adjuvant Tamoxifen Therapy"
+    #%dataset_desc="The 76-gene signature defines high-risk patients that benefit from adjuvant tamoxifen therapy"
+    #%id_type=HG-U133_Plus_2
+    #%contrast_names="GSM305129","GSM305130","GSM305131","GSM305132"
 
-* Various file header metadata fields are supported.  These currently are::
+  * Various file header metadata fields are supported.  These 
+    currently are::
 
-  - dataset_name
-  - dataset_desc
-  - contrast_names [multi]
-  - gs_up_sizes [multi]
-  - gs_dn_sizes [multi]
-  - gs_p_val_thres [multi]
-  - gs_m_val_thres [multi]
-  - gs_a_val_thres [multi]
-  - gs_data_split_meths [multi]
-  - gs_min_size
-  - gs_max_size
-  - id_type
-  - organism (specify only gene symbols are your IDs (#%id_type=GeneSymbol) Confero will automatically 
-determine organism for all other ID types)
+    - dataset_name
+    - dataset_desc
+    - contrast_names [multi]
+    - gs_up_sizes [multi]
+    - gs_dn_sizes [multi]
+    - gs_p_val_thres [multi]
+    - gs_m_val_thres [multi]
+    - gs_a_val_thres [multi]
+    - gs_data_split_meths [multi]
+    - gs_min_size
+    - gs_max_size
+    - id_type
+    - organism (specify only gene symbols are your IDs 
+      (#%id_type=GeneSymbol) Confero will automatically determine 
+      organism for all other ID types)
 
-* Various additional annotation metadata fields are supported.  These currently are::
+  * Various additional annotation metadata fields are supported. 
+    These currently are::
 
-  - system
-  - study_no
-  - cell_tissue
-  - stimulus
+    - system
+    - study_no
+    - cell_tissue
+    - stimulus
 
-* If the metadata header dataset_name is not included, the basename of the file will be used for 
-the dataset name.
+  * If the metadata header dataset_name is not included, the 
+    basename of the file will be used for the dataset name.
 
-* For multi-contrast dataset files, the metadata header **contrast_names** is required.  For single-contrast 
-dataset files, if the metadata header does not exist the uploaded contrast file basename will be used.
+  * For multi-contrast dataset files, the metadata header 
+    contrast_names is required.  For single-contrast dataset 
+    files, if the metadata header does not exist the uploaded 
+    contrast file basename will be used.
 
-* If you already have certain metadata fields in your file header then you should skip using the OPTIONAL 
-web form menus to specify these fields.
+  * If you already have certain metadata fields in your file 
+    header then you should ignore the OPTIONAL web form menus 
+    to specify these fields.
     </help>
 </tool>
 
