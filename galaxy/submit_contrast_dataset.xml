@@ -32,7 +32,7 @@
             <help>OPTIONAL: select ID type if not already set in data file header</help>
         </param>
         <param name="organism" type="select" force_select="false" optional="true" label="Organism" dynamic_options="cfo_get_info('organisms', True)">
-            <help>OPTIONAL: select organism if not already set in data file header AND your IDs are gene symbols</help>
+            <help>OPTIONAL: select organism if your IDs are gene symbols (i.e. #%id_type=GeneSymbol) AND organism not already set in data file header</help>
         </param>
         <!-- Galaxy doesn't yet support dynamic_options controlling conditionals
         <conditional name="id_type_cond">
@@ -78,21 +78,52 @@
     </outputs>
     <code file="common_functions.py"/>
     <help>
-This tool will check, process, map a source contrast dataset file (idMAPSMAPSMAPS...) into an 
-Entrez Gene ID-based contrast file using the latest NCBI Entrez Gene information and provide you a 
-summary report of what it did. All the contrasts in the file form a dataset.  The tool will then 
-compute the gene sets for each contrast using parameters provided or defaults and then submit the 
-dataset, contrasts, and gene sets into the Confero database.
+This tool will::
 
-* The contrasts in a file together form a dataset.  Each individual contrast in the file is typically a single experimental condition or coefficient.
+1. Check, process, map and collapse a source contrast dataset (idMAPSMAPSMAPS...) into an 
+Entrez Gene ID-based contrast dataset using the latest source platform annnotations and NCBI Entrez Gene 
+database.
 
-* The contrast dataset file can already be Entrez Gene ID-based, in this case the tool will check, process and update the IDs in your file using the latest NCBI Entrez Gene information and also provide you a report of what it did.
+2. Extracts gene sets from each contrast using parameters provided in the data file header or using 
+Confero system defaults.
 
-* The contrast dataset file can exclude any or all of the M, P or S column(s) (idA, idAAA, idAMAMAM, idMAPMAPMAP...) if you do not have these.
+3. Submit dataset, contrasts, gene sets and all metadata into the Confero DB.
+
+The tool provides a summary report of the procedure as output. 
+
+If you do not have file to choose from in the Contrast Dataset File drop-down menu, it's because you have no files 
+of this format in your Galaxy history.  You first need to do either one of the following::
+
+  - Go to Get Data --> Upload File, select File Format: **cfocontrastdataset**, browse for and upload your idMAPS
+  file.
+  - Go to Upload LIMMA/SAM R Object, browse for and upload your limma/samr object file, then go to
+  Convert LIMMA/SAM R Object and convert the object into an idMAPS file and adding the request header fields.
+
+IMPORTANT INFORMATION::
+
+* All the contrasts in a file form a contrast dataset. Each individual contrast in the dataset is typically 
+a experimental condition pairwise comparison or a linear model contrast matrix coefficient.
+
+* The contrast dataset file can already be Entrez Gene ID-based, in this case the tool will check, 
+process and update the IDs in your file using the latest NCBI Entrez Gene database.
+
+* The contrast dataset file can exclude any or all of the M, P or S column(s) (idA, idAAA, idAMAMAM, 
+idMAPMAPMAP) though it is highly recommended you have these.
 
 * The contrast dataset file requires a data column header unless there is only one contrast in the dataset.
 
-* Various header metadata fields in your contrast file are supported.  These currently are:
+* All header metadata fields begin with a #% and have an = after the field name and before the field data. 
+Field data with spaces must be quoted " ". Fields which accept multiple inputs need to be separated with
+a comma.  All header metadata fields must be at the top of the file, before any column header or data. 
+Here is an example of a 4 contrast dataset::
+
+  #%dataset_name="Adjuvant Tamoxifen Therapy"
+  #%dataset_desc="The 76-gene signature defines high-risk patients that benefit from adjuvant tamoxifen therapy"
+  #%id_type=HG-U133_Plus_2
+  #%contrast_names="GSM305129","GSM305130","GSM305131","GSM305132"
+  ID    A   M   P   S   A   M   P   S   A   M   P   S    A   M   P   S
+
+* Various file header metadata fields are supported.  These currently are::
 
   - dataset_name
   - dataset_desc
@@ -106,30 +137,24 @@ dataset, contrasts, and gene sets into the Confero database.
   - gs_min_size
   - gs_max_size
   - id_type
-  - organism (only necessary when using gene symbols as IDs, i.e. id_type=GeneSymbol)
+  - organism (specify only gene symbols are your IDs (#%id_type=GeneSymbol) Confero will automatically 
+determine organism for all other ID types)
 
-* Various additional annotation metadata fields are supported.  These currently are:
+* Various additional annotation metadata fields are supported.  These currently are::
 
   - system
   - study_no
   - cell_tissue
   - stimulus
 
-* Metadata header fields must be at the top file, before any data column header or data.  They should have the following form shown below, in this particular example we have a batch contrast file with 4 contrasts (therefore 4 contrast names)::
+* If the metadata header dataset_name is not included, the basename of the file will be used for 
+the dataset name.
 
-  #%id_type="HG-U133_Plus_2"
-  #%dataset_name="Adjuvant Tamoxifen Therapy"
-  #%dataset_desc="The 76-gene signature defines high-risk patients that benefit from adjuvant tamoxifen therapy"
-  #%contrast_names="GSM305129","GSM305130","GSM305131","GSM305132"
+* For multi-contrast dataset files, the metadata header **contrast_names** is required.  For single-contrast 
+dataset files, if the metadata header does not exist the uploaded contrast file basename will be used.
 
-* If the metadata header dataset_name is not included, the base name of the file will be used for the dataset name.
-
-* For multi-contrast dataset files, the metadata header **contrast_names** is required.  For single-contrast dataset files, if the metadata header does not exist the uploaded contrast file basename will be used.
-
-* If you have a metadata header already defined in your file for the equivalent web page form field, then you can forgo selecting or typing anything into the web page form field.  For example, if you have id_type metatadata header defined, then you do not need to select it from the drop-down menu. 
-
-If you have nothing to choose from in the Contrast File to Check drop-down menu, then you need to 
-first go to Get Data --> Upload File in order to upload an idMAPS contrast dataset file.
+* If you already have certain metadata fields in your file header then you should skip using the OPTIONAL 
+web form menus to specify these fields.
     </help>
 </tool>
 

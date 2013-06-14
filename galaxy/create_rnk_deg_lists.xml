@@ -67,7 +67,7 @@
         <param name="id_type" type="select" force_select="true" optional="false" label="Output ID Type">
             <option value="EntrezGene" selected="true">Entrez Gene</option>
             <option value="GeneSymbol">Gene Symbol</option>
-            <help>IMPORTANT: for Confero Analyze Data tool use the default Entrez Gene IDs</help>
+            <help>IMPORTANT: leave as default output ID type of Entrez Gene IDs for use in Confero</help>
         </param>
     </inputs>
     <outputs>

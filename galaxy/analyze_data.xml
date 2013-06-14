@@ -81,8 +81,8 @@
                 <param name="do_ar_analysis" type="boolean" label="Perform AR-only Gene Set Analysis" help="applies only to MSigDB C2 CGP and Confero DB"/>
                 <param name="gene_set_dbs" type="drill_down" display="checkbox" hierarchy="exact" multiple="true" optional="false" label="Analyze Using the Following Gene Set DBs">
                     <options>
-                        <option name="All (Confero, MSigDB, GeneSigDB)" value="cfodb,msigdb,genesigdb">
-                            <option name="Confero Gene Set DB" value="cfodb">
+                        <option name="All (Confero DB, MSigDB, GeneSigDB)" value="cfodb,msigdb,genesigdb">
+                            <option name="Confero DB" value="cfodb">
                                 <option name="Contrast gene sets" value="cfodb.contrasts"/>
                                 <option name="Uploaded gene sets" value="cfodb.uploads"/>
                             </option>
@@ -195,7 +195,7 @@
     </outputs>
     <code file="common_functions.py"/>
     <help>
-This tool will analyze data for gene set enrichment using the Confero gene set DB, MSigDB, and GeneSigDB collections.
+This tool will analyze data for gene set enrichment using the Confero DB, MSigDB, and/or GeneSigDB gene set collections.
     </help>
 </tool>
 
