@@ -142,7 +142,7 @@ sub _load_data_from_file {
                 $column_header =~ s/^DF$/Df/;
                 push @{$self->{column_headers}}, $column_header;
             }
-            # filter out undef entries in captured column header parts (if certain M-A-P-S-Df columns aren't there will have undef array entries)
+            # filter out undef entries in captured column header parts (if certain M-A-P-S-F-Df columns aren't there will have undef array entries)
             @captured_column_header_parts = grep defined, @captured_column_header_parts;
             # set M-A-P-S-F-Df column header indexes
             for my $i (0 .. $#captured_column_header_parts) {
