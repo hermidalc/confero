@@ -22,11 +22,11 @@ sub sig_handler {
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
 
-my $man = 0;
+#my $man = 0;
 GetOptions(
-    'man' => \$man,
+#    'man' => \$man,
 ) || pod2usage(-verbose => 0);
-pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+#pod2usage(-exitstatus => 0, -verbose => 2) if $man;
 print "#", '-' x 120, "#\n",
       "# Confero MSigDB C2 AR (all regulated) GMT Database Builder/Updater [" . scalar localtime() . "]\n\n";
 my @msigdb_c2_file_paths = grep { m/c2\.(all|cgp)\.v.+?\.gmt/i } <$CTK_GSEA_GENE_SET_DB_DIR/c2.*.gmt>;
@@ -76,7 +76,6 @@ cfo_build_msigdb_c2_ar_gmt.pl - Confero MSigDB C2 AR (all regulated) GMT Databas
 
  Options:
      --help        Display usage and exit
-     --man         Display full program documentation
      --version     Display program version and exit
 
 =cut

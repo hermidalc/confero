@@ -20,22 +20,22 @@ select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
 
 my $force = 0;
-my $man = 0;
+#my $man = 0;
 GetOptions(
     'force' => \$force,
-    'man' => \$man,
+#    'man' => \$man,
 ) || pod2usage(-verbose => 0);
-pod2usage(-exitstatus => 0, -verbose => 2) if $man;
-pod2usage(-message => 'Missing CTK Dataset ID') unless @ARGV and scalar(@ARGV) == 1;
-pod2usage(-message => "Invalid CTK dataset ID $ARGV[0]") unless is_valid_id($ARGV[0]);
+#pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+pod2usage(-message => 'Missing Confero Dataset ID') unless @ARGV and scalar(@ARGV) == 1;
+pod2usage(-message => "Invalid Confero dataset ID $ARGV[0]") unless is_valid_id($ARGV[0]);
 print "#", '-' x 120, "#\n",
       "# Confero Dataset Deleter [" . scalar localtime() . "]\n\n";
 my $result_message;
 eval {
-    my $ctk_db = Confero::DB->new();
-    $ctk_db->txn_do(sub {
+    my $cfo_db = Confero::DB->new();
+    $cfo_db->txn_do(sub {
         my $dataset_name = deconstruct_id($ARGV[0]);
-        if (my $dataset = $ctk_db->resultset('ContrastDataSet')->find({
+        if (my $dataset = $cfo_db->resultset('ContrastDataSet')->find({
                 name => $dataset_name,
         })) {
             if (!$force) {
@@ -44,7 +44,7 @@ eval {
                 $answer = 'no' if $answer =~ /^\s*$/;
                 if ($answer =~ /^y(es|)$/i) {
                     $dataset->delete();
-                    $result_message = "Successfully removed CTK dataset '$ARGV[0]'";
+                    $result_message = "Successfully removed Confero dataset '$ARGV[0]'";
                 }
                 else {
                     $result_message = "No changes made to database, exiting...";
@@ -52,11 +52,11 @@ eval {
             }
             else {
                 $dataset->delete();
-                $result_message = "Successfully removed CTK dataset '$ARGV[0]'";
+                $result_message = "Successfully removed Confero dataset '$ARGV[0]'";
             }
         }
         else {
-            $result_message = "ERROR: CTK dataset '$ARGV[0]' does not exist in repository, no changes made to database";
+            $result_message = "ERROR: Confero dataset '$ARGV[0]' does not exist in repository, no changes made to database";
         }
     });
 };
@@ -75,7 +75,7 @@ __END__
 
 =head1 NAME 
 
-cfo_delete_dataset.pl - Confero Dataset Deleter
+cfo_delete_dataset.pl - Confero DB Dataset Deleter
 
 =head1 SYNOPSIS
 
@@ -84,7 +84,6 @@ cfo_delete_dataset.pl - Confero Dataset Deleter
  Options:
      --force      Force delete without prompt
      --help       Display usage message and exit
-     --man        Display full program documentation
      --version    Display program version and exit
 
 =cut
