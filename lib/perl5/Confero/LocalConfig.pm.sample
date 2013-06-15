@@ -140,7 +140,7 @@ const our $CTK_GSEA_NUM_PERMUTATIONS                 => 1500;
 const our $CTK_GSEA_MAX_JAVA_HEAP_SIZE               => '1024m';
 const our $CTK_GSEA_DEFAULT_SCORING_SCHEME           => 'weighted';
 
-# Confero Web
+# Web
 const our $CTK_WEB_SERVER_HOST                       => 'your_confero_app_server_hostname';
 const our $CTK_WEB_SERVER_PORT                       => 5000;
 const our $CTK_DISPLAY_ID_SPACER                     => '_';
