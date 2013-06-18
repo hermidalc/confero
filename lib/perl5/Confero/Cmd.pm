@@ -1284,14 +1284,16 @@ sub analyze_data {
                         $cfo_db->txn_do(sub {
                             if ($do_cfo_db_contrasts_analysis) {
                                 my @contrast_datasets = $cfo_db->resultset('ContrastDataSet')->search(undef, {
-                                    prefetch => [
-                                        'organism',
-                                        { 'contrasts' => 'gene_sets' }
-                                    ],
+                                    prefetch => [qw( organism annotations )],
                                 })->all();
                                 CONTRAST_DATASET: for my $contrast_dataset (@contrast_datasets) {
                                     next CONTRAST_DATASET if %filter_organisms and !exists $filter_organisms{$contrast_dataset->organism->name};
-                                    CONTRAST: for my $contrast ($contrast_dataset->contrasts) {
+                                    my @contrasts = $contrast_dataset->contrasts(undef, {
+                                        prefetch => {
+                                            'gene_sets' => { 'gene_set_genes' => 'gene' },
+                                        },
+                                    })->all();
+                                    CONTRAST: for my $contrast (@contrasts) {
                                         next CONTRAST if %filter_contrast_names and !exists $filter_contrast_names{$contrast->name};
                                         my %contrast_dataset_annotations = map { $_->name => $_->value } $contrast_dataset->annotations;
                                         for my $annotation_name (keys %filter_annotations) {
@@ -1308,7 +1310,10 @@ sub analyze_data {
                                                 $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
                                             } $gene_set->gene_set_genes;
                                             my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
-                                            print $cfo_db_contrasts_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                            print $cfo_db_contrasts_gmt_fh 
+                                                "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", 
+                                                join("\t", natsort @gene_ids), 
+                                                "\n";
                                         }
                                     }
                                 }
@@ -1331,11 +1336,17 @@ sub analyze_data {
                                         next GENE_SET if %filter_annotations and (!defined $gene_set_annotations{$annotation_name} or 
                                             $gene_set_annotations{$annotation_name} ne $filter_annotations{$annotation_name});
                                     }
+                                    my @gene_set_genes = $gene_set->gene_set_genes(undef, {
+                                        prefetch => 'gene',
+                                    })->all();
                                     my @gene_ids = map {
                                         $CTK_GSEA_GSDB_ID_TYPE eq 'entrez' ? $_->gene->id : uc($_->gene->symbol)
-                                    } $gene_set->gene_set_genes;
+                                    } @gene_set_genes;
                                     my $gene_set_id = construct_id($gene_set->name, $gene_set->contrast_name, $gene_set->type);
-                                    print $cfo_db_uploads_gmt_fh "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", join("\t", natsort @gene_ids), "\n";
+                                    print $cfo_db_uploads_gmt_fh 
+                                        "\U$gene_set_id\E\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", 
+                                        join("\t", natsort @gene_ids), 
+                                        "\n";
                                 }
                                 close($cfo_db_uploads_gmt_fh);
                             }
@@ -2060,14 +2071,16 @@ sub extract_gene_set_matrix {
                     $cfo_db->txn_do(sub {
                         if ($create_cfo_db_contrasts) {
                             my @contrast_datasets = $cfo_db->resultset('ContrastDataSet')->search(undef, {
-                                prefetch => [
-                                    'organism',
-                                    { 'contrasts' => 'gene_sets' }
-                                ],
+                                prefetch => [qw( organism annotations )],
                             })->all();
                             CONTRAST_DATASET: for my $contrast_dataset (@contrast_datasets) {
                                 next CONTRAST_DATASET if %filter_organisms and !exists $filter_organisms{$contrast_dataset->organism->name};
-                                CONTRAST: for my $contrast ($contrast_dataset->contrasts) {
+                                my @contrasts = $contrast_dataset->contrasts(undef, {
+                                    prefetch => {
+                                        'gene_sets' => { 'gene_set_genes' => 'gene' },
+                                    },
+                                })->all();
+                                CONTRAST: for my $contrast (@contrasts) {
                                     next CONTRAST if %filter_contrast_names and !exists $filter_contrast_names{$contrast->name};
                                     my %contrast_dataset_annotations = map { $_->name => $_->value } $contrast_dataset->annotations;
                                     for my $annotation_name (keys %filter_annotations) {
@@ -2079,7 +2092,10 @@ sub extract_gene_set_matrix {
                                         my $gene_set_id = construct_id($contrast_dataset->name, $contrast->name, $gene_set->type);
                                         next CONTRAST_GENE_SET if %filter_contrast_gene_set_ids and !exists $filter_contrast_gene_set_ids{$gene_set_id};
                                         my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                        print $cfo_db_contrasts_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                        print $cfo_db_contrasts_gmt_fh 
+                                            "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/contrast_gene_set/$gene_set_id\t", 
+                                            join("\t", nsort @gene_ids), 
+                                            "\n";
                                     }
                                 }
                             }
@@ -2100,8 +2116,14 @@ sub extract_gene_set_matrix {
                                     next GENE_SET if %filter_annotations and (!defined $gene_set_annotations{$annotation_name} or 
                                         $gene_set_annotations{$annotation_name} ne $filter_annotations{$annotation_name});
                                 }
-                                my @gene_ids = map { $_->gene->id } $gene_set->gene_set_genes;
-                                print $cfo_db_uploads_gmt_fh "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", join("\t", nsort @gene_ids), "\n";
+                                my @gene_set_genes = $gene_set->gene_set_genes(undef, {
+                                    prefetch => 'gene',
+                                })->all();
+                                my @gene_ids = map { $_->gene->id } @gene_set_genes;
+                                print $cfo_db_uploads_gmt_fh 
+                                    "$gene_set_id\thttp://$CTK_WEB_SERVER_HOST:$CTK_WEB_SERVER_PORT/view/gene_set/$gene_set_id\t", 
+                                    join("\t", nsort @gene_ids), 
+                                    "\n";
                             }
                             close($cfo_db_uploads_gmt_fh);
                         }
