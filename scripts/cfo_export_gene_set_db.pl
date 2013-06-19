@@ -29,6 +29,14 @@ GetOptions(
     'as-gene-symbols' => \$as_gene_symbols,
     'order-by-rank'   => \$order_by_rank,
 ) || pod2usage(-verbose => 0);
+my $output_file_path = shift @ARGV;
+my $output_fh;
+if (defined $output_file_path) {
+    open($output_fh, '>', $output_file_path) or die "Could not create $output_file_path: $!\n";
+}
+else {
+    $output_fh = *STDOUT;
+}
 #print "#", '-' x 120, "#\n",
 #      "# Confero Gene Set DB Exporter [" . scalar localtime() . "]\n\n";
 # this code will likely be refactored to a library function soon since used in two other places in Confero
@@ -65,7 +73,7 @@ eval {
                             $as_gene_symbols ? natkeysort { $_->gene->symbol } $gene_set->gene_set_genes :
                                                nkeysort { $_->gene->id } $gene_set->gene_set_genes
                         );
-                        print 
+                        print $output_fh 
                             ">$gene_set_id | ", 
                             $contrast_dataset->organism->name, ' | ', 
                             $contrast_dataset->source_data_file_id_type, ' | ',
@@ -103,7 +111,7 @@ eval {
                     $as_gene_symbols                 ? natkeysort { $_->gene->symbol } @gene_set_genes :
                                                        nkeysort { $_->gene->id } @gene_set_genes
                 );
-                print 
+                print $output_fh 
                     ">$gene_set_id | ", 
                     $gene_set->organism->name, ' | ', 
                     $gene_set->source_data_file_id_type, ' | ',
