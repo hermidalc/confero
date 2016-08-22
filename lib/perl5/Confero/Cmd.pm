@@ -71,7 +71,7 @@ sub process_submit_data_file {
             'collapsing-method=s'           => \$collapsing_method,
             'skip-threshold-checks'         => \$skip_threshold_checks,
             'overwrite-existing'            => \$overwrite_existing,
-            'processsed-file|output-file=s' => \$output_file_path,
+            'processed-file|output-file=s'  => \$output_file_path,
             'no-processed-file-output'      => \$no_processed_file_output,
             'debug-file=s'                  => \$debug_file_path,
         ) || pod2usage(-verbose => 0);
