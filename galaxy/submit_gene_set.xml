@@ -1,4 +1,4 @@
-<tool name="Submit Gene Set" id="confero_platform_submit_gene_set" version="0.1">
+<tool name="Submit Gene Set" id="confero_submit_gene_set" version="0.1">
     <description>to the Confero DB</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl $cmd 

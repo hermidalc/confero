@@ -1,4 +1,4 @@
-<tool name="Extract Leading Edge Matrix" id="confero_platform_extract_gsea_leading_edge_matrix" version="0.1">
+<tool name="Extract Leading Edge Matrix" id="confero_extract_gsea_leading_edge_matrix" version="0.1">
     <description>from a GSEA result</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_gsea_leading_edge_matrix

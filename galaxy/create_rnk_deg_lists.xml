@@ -1,4 +1,4 @@
-<tool name="Create Ranked or DEG Lists" id="confero_platform_create_rnk_deg_lists" force_history_refresh="True" version="0.1">
+<tool name="Create Ranked or DEG Lists" id="confero_create_rnk_deg_lists" force_history_refresh="True" version="0.1">
     <description>from a contrast dataset or single contrast in your history or in the Confero DB</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl create_rnk_deg_lists

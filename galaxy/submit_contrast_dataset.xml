@@ -1,4 +1,4 @@
-<tool name="Submit Contrast Dataset" id="confero_platform_submit_contrast_dataset" version="0.1">
+<tool name="Submit Contrast Dataset" id="confero_submit_contrast_dataset" version="0.1">
     <description>to the Confero DB and compute and store gene sets</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl $cmd 

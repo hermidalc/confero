@@ -1,4 +1,4 @@
-<tool name="Extract Results Matrix" id="confero_platform_extract_analysis_results_matrix" version="0.1">
+<tool name="Extract Results Matrix" id="confero_extract_analysis_results_matrix" version="0.1">
     <description>from one or more related GSEA or ORA results</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl $results_type_cond.cmd

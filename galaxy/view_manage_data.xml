@@ -1,4 +1,4 @@
-<tool name="View and Manage Data" id="confero_platform_view_manage_data" tool_type="data_source" version="0.1">
+<tool name="View and Manage Data" id="confero_view_manage_data" tool_type="data_source" version="0.1">
     <description>in the Confero DB</description>
     <inputs action="CONFERO_WEB_SERVER_URL" check_values="false" method="get">
         <display>Go to Confero Web App $GALAXY_URL</display>

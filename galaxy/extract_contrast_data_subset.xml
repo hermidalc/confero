@@ -1,4 +1,4 @@
-<tool name="Extract Contrast Data Subset" id="confero_platform_extract_contrast_data_subset" version="0.1">
+<tool name="Extract Contrast Data Subset" id="confero_extract_contrast_data_subset" version="0.1">
     <description>from a contrast dataset</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_contrast_data_subset

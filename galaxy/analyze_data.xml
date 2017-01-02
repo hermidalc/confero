@@ -1,4 +1,4 @@
-<tool name="Analyze Data" id="confero_platform_analyze_data" version="0.1">
+<tool name="Analyze Data" id="confero_analyze_data" version="0.1">
     <description>for gene set enrichment using Confero DB, MSigDB, GeneSigDB collections</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl analyze_data 

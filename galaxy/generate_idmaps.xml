@@ -1,4 +1,4 @@
-<tool name="Convert LIMMA/SAM R Object" id="confero_platform_generate_idmaps" version="0.1">
+<tool name="Convert LIMMA/SAM R Object" id="confero_generate_idmaps" version="0.1">
 	<description>into a contrast dataset idMAPS file</description>
 	<command interpreter="bash">r_wrapper.sh $script_file</command>
 	<inputs>
@@ -51,7 +51,7 @@
         		ct.names = c(ct.names, "${s.contrast_selected}")
       		#end for
       		names(pv.thres) = ct.names 
-			source(paste(root.dir,"/tools/confero_platform/galaxy/generate_idmaps.R",sep=""))
+			source(paste(root.dir,"/tools/confero/galaxy/generate_idmaps.R",sep=""))
 			generate.idmaps(file.path=data.path,name=dataset.name,desc=dataset.desc,id=id.type,dest=dest.path,ct.pthres.selected=pv.thres,delta=delta,all.selected=all.selected,all.pv.thres=all.pv.thres)
 		</configfile>
 	</configfiles>

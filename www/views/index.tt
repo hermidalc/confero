@@ -41,7 +41,7 @@
             <h3>Your application's environment</h3>
 
             <ul>
-                <li>Location: <code>/path/to/confero_platform/www</code></li>
+                <li>Location: <code>/path/to/confero/www</code></li>
                 <li>Template engine: <code><% settings.template %></code></li>
                 <li>Logger: <code><% settings.logger %></code></li>
                 <li>Environment: <code><% settings.environment %></code></li>
@@ -81,7 +81,7 @@
                 </tr>
                 <tr>
                     <td>Appdir</td>
-                    <td><tt>/path/to/confero_platform/www</tt></td>
+                    <td><tt>/path/to/confero/www</tt></td>
                 </tr>
                 <tr>
                     <td>Template engine</td>

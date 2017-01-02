@@ -1,4 +1,4 @@
-<tool name="Extract Gene Set Matrix" id="confero_platform_extract_gene_set_matrix" version="0.1">
+<tool name="Extract Gene Set Matrix" id="confero_extract_gene_set_matrix" version="0.1">
     <description>from multiple gene sets in Confero DB, MSigDB, GeneSigDB</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_gene_set_matrix
@@ -65,7 +65,7 @@
             <when value="specific_gsdb_gs">
                 <repeat name="gsdb_gene_sets" title="MSigDB/GeneSigDB Gene Sets">
                     <param name="gsdb_gene_set_id" type="select" label="MSigDB/GeneSigDB Gene Set ID">
-                        <options from_file="../tools/confero_platform/galaxy/data/id_options_gsdb_gene_sets.txt">
+                        <options from_file="../tools/confero/galaxy/data/id_options_gsdb_gene_sets.txt">
                             <column name="name" index="1"/>
                             <column name="value" index="0"/>
                         </options>

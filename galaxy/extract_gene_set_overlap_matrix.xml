@@ -1,4 +1,4 @@
-<tool name="Extract Gene Set Overlap Matrix" id="confero_platform_extract_gene_set_overlap_matrix" version="0.1">
+<tool name="Extract Gene Set Overlap Matrix" id="confero_extract_gene_set_overlap_matrix" version="0.1">
     <description>from a gene set matrix or GSEA leading edge matrix</description>
     <command interpreter="perl">
         ../bin/cfo_run_cmd.pl extract_gene_set_overlap_matrix
