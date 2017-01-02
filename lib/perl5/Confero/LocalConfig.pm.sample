@@ -94,7 +94,7 @@ our %EXPORT_TAGS = (
 our $VERSION = '0.1';
 
 # General
-const our $CTK_BASE_DIR                              => '/path/to/confero_platform';
+const our $CTK_BASE_DIR                              => '/path/to/confero';
 const our $CTK_TEMP_DIR                              => "$CTK_BASE_DIR/tmp";
 const our $CTK_ADMIN_EMAIL_ADDRESS                   => 'confero_admin@your_organisation.com';
 
@@ -103,7 +103,7 @@ const our $CTK_ADMIN_EMAIL_ADDRESS                   => 'confero_admin@your_orga
 const our $CTK_DB_DRIVER                             => 'mysql';
 # if you specify localhost will use socket instead of port below
 const our $CTK_DB_HOST                               => 'your_condero_db_hostname';
-const our $CTK_DB_NAME                               => 'confero_prod';
+const our $CTK_DB_NAME                               => 'confero';
 # MySQL default is 3306
 const our $CTK_DB_PORT                               => 3306;
 const our $CTK_DB_USER                               => 'confero';
@@ -132,7 +132,7 @@ const our $CTK_DATA_GENE_SET_MIN_ABS_M               => 0;
 const our $CTK_DATA_GENE_SET_MAX_P                   => 1;
 
 # Affymetrix
-const our $CTK_AFFY_ANNOT_NETAFFX_VERSION            => 'na33';
+const our $CTK_AFFY_ANNOT_NETAFFX_VERSION            => 'na36';
 
 # GSEA
 const our $CTK_GSEA_JAVA_PATH                        => 'java';
